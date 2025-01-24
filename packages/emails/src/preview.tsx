@@ -1,97 +1,72 @@
-import { render } from '@faire/mjml-react/utils/render'
-import fs from 'fs'
-import path from 'path'
-import {
-  AlmostReachedChatsLimitEmail,
-  AlmostReachedStorageLimitEmail,
-  DefaultBotNotificationEmail,
-  GuestInvitationEmail,
-  ReachedChatsLimitEmail,
-  ReachedStorageLimitEmail,
-  WorkspaceMemberInvitation,
-} from './emails'
+import fs from "fs";
+import path from "path";
+import { render } from "@faire/mjml-react/utils/render";
+import * as React from "react";
+import { AlmostReachedChatsLimitEmail } from "./emails/AlmostReachedChatsLimitEmail";
+import { DefaultBotNotificationEmail } from "./emails/DefaultBotNotificationEmail";
+import { GuestInvitationEmail } from "./emails/GuestInvitationEmail";
+import { MagicLinkEmail } from "./emails/MagicLinkEmail";
+import { WorkspaceMemberInvitation } from "./emails/WorkspaceMemberInvitationEmail";
 
 const createDistFolder = () => {
-  const dist = path.resolve(__dirname, 'dist')
+  const dist = path.resolve(__dirname, "dist");
   if (!fs.existsSync(dist)) {
-    fs.mkdirSync(dist)
+    fs.mkdirSync(dist);
   }
-}
+};
 
 const createHtmlFile = () => {
   fs.writeFileSync(
-    path.resolve(__dirname, 'dist', 'guestInvitation.html'),
+    path.resolve(__dirname, "dist", "guestInvitation.html"),
     render(
       <GuestInvitationEmail
-        workspaceName={'Typebot'}
-        typebotName={'Lead Generation'}
-        url={'https://app.typebot.io'}
-        hostEmail={'baptiste@typebot.io'}
-        guestEmail={'guest@typebot.io'}
-      />
-    ).html
-  )
+        workspaceName={"Typebot"}
+        typebotName={"Lead Generation"}
+        url={"https://app.typebot.io"}
+        hostEmail={"host@typebot.io"}
+        guestEmail={"guest@typebot.io"}
+      />,
+    ).html,
+  );
   fs.writeFileSync(
-    path.resolve(__dirname, 'dist', 'workspaceMemberInvitation.html'),
+    path.resolve(__dirname, "dist", "workspaceMemberInvitation.html"),
     render(
       <WorkspaceMemberInvitation
-        workspaceName={'Typebot'}
-        url={'https://app.typebot.io'}
-        hostEmail={'baptiste@typebot.io'}
-        guestEmail={'guest@typebot.io'}
-      />
-    ).html
-  )
+        workspaceName={"Typebot"}
+        url={"https://app.typebot.io"}
+        hostEmail={"host@typebot.io"}
+        guestEmail={"guest@typebot.io"}
+      />,
+    ).html,
+  );
   fs.writeFileSync(
-    path.resolve(__dirname, 'dist', 'almostReachedChatsLimit.html'),
+    path.resolve(__dirname, "dist", "almostReachedChatsLimit.html"),
     render(
       <AlmostReachedChatsLimitEmail
-        url={'https://app.typebot.io'}
+        usagePercent={86}
         chatsLimit={2000}
-      />
-    ).html
-  )
+        workspaceName="My Workspace"
+      />,
+    ).html,
+  );
   fs.writeFileSync(
-    path.resolve(__dirname, 'dist', 'almostReachedStorageLimit.html'),
-    render(
-      <AlmostReachedStorageLimitEmail
-        url={'https://app.typebot.io'}
-        storageLimit={4}
-      />
-    ).html
-  )
-  fs.writeFileSync(
-    path.resolve(__dirname, 'dist', 'reachedChatsLimit.html'),
-    render(
-      <ReachedChatsLimitEmail
-        url={'https://app.typebot.io'}
-        chatsLimit={10000}
-      />
-    ).html
-  )
-  fs.writeFileSync(
-    path.resolve(__dirname, 'dist', 'reachedStorageLimit.html'),
-    render(
-      <ReachedStorageLimitEmail
-        url={'https://app.typebot.io'}
-        storageLimit={8}
-      />
-    ).html
-  )
-  fs.writeFileSync(
-    path.resolve(__dirname, 'dist', 'defaultBotNotification.html'),
+    path.resolve(__dirname, "dist", "defaultBotNotification.html"),
     render(
       <DefaultBotNotificationEmail
-        resultsUrl={'https://app.typebot.io'}
+        resultsUrl={"https://app.typebot.io"}
         answers={{
-          'Group #1': 'Answer #1',
-          Name: 'Baptiste',
-          Email: 'baptiste.arnaud95@gmail.com',
+          "Group #1": "Answer #1",
+          Name: "Baptiste",
+          Email: "baptiste.arnaud95@gmail.com",
         }}
-      />
-    ).html
-  )
-}
+      />,
+    ).html,
+  );
+  fs.writeFileSync(
+    path.resolve(__dirname, "dist", "magicLink.html"),
+    render(<MagicLinkEmail url={"https://app.typebot.io"} />).html,
+  );
+};
 
-createDistFolder()
-createHtmlFile()
+createDistFolder();
+createHtmlFile();

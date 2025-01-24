@@ -1,23 +1,25 @@
-import { AlertInfo } from '@/components/AlertInfo'
-import { CopyButton } from '@/components/CopyButton'
+import { AlertInfo } from "@/components/AlertInfo";
+import { CopyButton } from "@/components/CopyButton";
 import {
-  Modal,
-  ModalOverlay,
-  ModalContent,
-  ModalHeader,
+  Code,
   Heading,
-  ModalCloseButton,
-  ModalBody,
-  OrderedList,
-  ListItem,
-  Tag,
-  InputGroup,
   Input,
+  InputGroup,
   InputRightElement,
+  ListItem,
+  Modal,
+  ModalBody,
+  ModalCloseButton,
+  ModalContent,
   ModalFooter,
-} from '@chakra-ui/react'
-import { env, getViewerUrl } from 'utils'
-import { ModalProps } from '../EmbedButton'
+  ModalHeader,
+  ModalOverlay,
+  OrderedList,
+  Stack,
+  Text,
+} from "@chakra-ui/react";
+import { env } from "@typebot.io/env";
+import type { ModalProps } from "../EmbedButton";
 
 export const NotionModal = ({
   isPublished,
@@ -37,33 +39,31 @@ export const NotionModal = ({
           {!isPublished && (
             <AlertInfo mb="4">You need to publish your bot first.</AlertInfo>
           )}
-          <OrderedList spacing={3}>
+          <OrderedList spacing={4}>
             <ListItem>
-              Type <Tag>/embed</Tag>
+              Type <Code>/embed</Code>
             </ListItem>
             <ListItem>
-              Paste your typebot URL
-              <InputGroup size="md" mt={2}>
-                <Input
-                  pr="4.5rem"
-                  type={'text'}
-                  defaultValue={`${
-                    env('VIEWER_INTERNAL_URL') ?? getViewerUrl()
-                  }/${publicId}`}
-                />
-                <InputRightElement width="4.5rem">
-                  <CopyButton
-                    textToCopy={`${
-                      env('VIEWER_INTERNAL_URL') ?? getViewerUrl()
-                    }/${publicId}`}
+              <Stack>
+                <Text>Paste your typebot URL</Text>
+                <InputGroup size="sm">
+                  <Input
+                    type={"text"}
+                    defaultValue={`${env.NEXT_PUBLIC_VIEWER_URL[0]}/${publicId}`}
                   />
-                </InputRightElement>
-              </InputGroup>
+                  <InputRightElement width="60px">
+                    <CopyButton
+                      size="sm"
+                      textToCopy={`${env.NEXT_PUBLIC_VIEWER_URL[0]}/${publicId}`}
+                    />
+                  </InputRightElement>
+                </InputGroup>
+              </Stack>
             </ListItem>
           </OrderedList>
         </ModalBody>
         <ModalFooter />
       </ModalContent>
     </Modal>
-  )
-}
+  );
+};

@@ -1,166 +1,111 @@
-import { Seo } from '@/components/Seo'
-import { UnlockPlanAlertInfo } from '@/components/UnlockPlanAlertInfo'
-import { AnalyticsGraphContainer } from '@/features/analytics'
-import { useUsage } from '@/features/billing'
-import { useTypebot, TypebotHeader } from '@/features/editor'
-import { useWorkspace } from '@/features/workspace'
-import { useToast } from '@/hooks/useToast'
+import { Seo } from "@/components/Seo";
+import { AnalyticsGraphContainer } from "@/features/analytics/components/AnalyticsGraphContainer";
 import {
+  defaultTimeFilter,
+  type timeFilterValues,
+} from "@/features/analytics/constants";
+import { TypebotHeader } from "@/features/editor/components/TypebotHeader";
+import { TypebotNotFoundPage } from "@/features/editor/components/TypebotNotFoundPage";
+import { useTypebot } from "@/features/editor/providers/TypebotProvider";
+import { useWorkspace } from "@/features/workspace/WorkspaceProvider";
+import { useToast } from "@/hooks/useToast";
+import { trpc } from "@/lib/trpc";
+import {
+  Button,
   Flex,
   HStack,
-  Button,
   Tag,
   Text,
   useColorModeValue,
-} from '@chakra-ui/react'
-import Link from 'next/link'
-import { useRouter } from 'next/router'
-import { useMemo } from 'react'
-import { getChatsLimit, getStorageLimit } from 'utils/pricing'
-import { useStats } from '../hooks/useStats'
-import { ResultsProvider } from '../ResultsProvider'
-import { ResultsTableContainer } from './ResultsTableContainer'
+} from "@chakra-ui/react";
+import Link from "next/link";
+import { useRouter } from "next/router";
+import { useMemo, useState } from "react";
+import { ResultsProvider } from "../ResultsProvider";
+import { ResultsTableContainer } from "./ResultsTableContainer";
 
-const ALERT_CHATS_PERCENT_THRESHOLD = 80
-const ALERT_STORAGE_PERCENT_THRESHOLD = 80
+const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
 
 export const ResultsPage = () => {
-  const router = useRouter()
-  const { workspace } = useWorkspace()
-  const { typebot, publishedTypebot } = useTypebot()
+  const router = useRouter();
+  const { workspace } = useWorkspace();
+  const { typebot, publishedTypebot, is404 } = useTypebot();
   const isAnalytics = useMemo(
-    () => router.pathname.endsWith('analytics'),
-    [router.pathname]
-  )
-  const { showToast } = useToast()
+    () => router.pathname.endsWith("analytics"),
+    [router.pathname],
+  );
+  const bgColor = useColorModeValue(
+    router.pathname.endsWith("analytics") ? "#f4f5f8" : "white",
+    router.pathname.endsWith("analytics") ? "gray.900" : "gray.950",
+  );
+  const [timeFilter, setTimeFilter] =
+    useState<(typeof timeFilterValues)[number]>(defaultTimeFilter);
 
-  const { stats, mutate } = useStats({
-    typebotId: publishedTypebot?.typebotId,
-    onError: (err) => showToast({ title: err.name, description: err.message }),
-  })
-  const { data: usageData } = useUsage(workspace?.id)
+  const { showToast } = useToast();
 
-  const chatsLimitPercentage = useMemo(() => {
-    if (!usageData?.totalChatsUsed || !workspace?.plan) return 0
-    return Math.round(
-      (usageData.totalChatsUsed /
-        getChatsLimit({
-          additionalChatsIndex: workspace.additionalChatsIndex,
-          plan: workspace.plan,
-          customChatsLimit: workspace.customChatsLimit,
-        })) *
-        100
-    )
-  }, [
-    usageData?.totalChatsUsed,
-    workspace?.additionalChatsIndex,
-    workspace?.customChatsLimit,
-    workspace?.plan,
-  ])
+  const {
+    data: { stats } = {},
+    refetch,
+  } = trpc.analytics.getStats.useQuery(
+    {
+      typebotId: publishedTypebot?.typebotId as string,
+      timeFilter,
+      timeZone,
+    },
+    {
+      enabled: !!publishedTypebot,
+      onError: (err) => showToast({ description: err.message }),
+    },
+  );
 
-  const storageLimitPercentage = useMemo(() => {
-    if (!usageData?.totalStorageUsed || !workspace?.plan) return 0
-    return Math.round(
-      (usageData.totalStorageUsed /
-        1024 /
-        1024 /
-        1024 /
-        getStorageLimit({
-          additionalStorageIndex: workspace.additionalStorageIndex,
-          plan: workspace.plan,
-          customStorageLimit: workspace.customStorageLimit,
-        })) *
-        100
-    )
-  }, [
-    usageData?.totalStorageUsed,
-    workspace?.additionalStorageIndex,
-    workspace?.customStorageLimit,
-    workspace?.plan,
-  ])
+  const handleDeletedResults = () => {
+    if (!stats) return;
+    refetch();
+  };
 
-  const handleDeletedResults = (total: number) => {
-    if (!stats) return
-    mutate({
-      stats: { ...stats, totalStarts: stats.totalStarts - total },
-    })
-  }
-
+  if (is404) return <TypebotNotFoundPage />;
   return (
     <Flex overflow="hidden" h="100vh" flexDir="column">
       <Seo
         title={
-          router.pathname.endsWith('analytics')
+          router.pathname.endsWith("analytics")
             ? typebot?.name
               ? `${typebot.name} | Analytics`
-              : 'Analytics'
+              : "Analytics"
             : typebot?.name
-            ? `${typebot.name} | Results`
-            : 'Results'
+              ? `${typebot.name} | Results`
+              : "Results"
         }
       />
       <TypebotHeader />
-      {chatsLimitPercentage > ALERT_CHATS_PERCENT_THRESHOLD && (
-        <Flex p="4">
-          <UnlockPlanAlertInfo
-            status="warning"
-            contentLabel={
-              <>
-                Your workspace collected{' '}
-                <strong>{chatsLimitPercentage}%</strong> of your total chats
-                limit this month. Upgrade your plan to continue chatting with
-                your customers beyond this limit.
-              </>
-            }
-            buttonLabel="Upgrade"
-          />
-        </Flex>
-      )}
-      {storageLimitPercentage > ALERT_STORAGE_PERCENT_THRESHOLD && (
-        <Flex p="4">
-          <UnlockPlanAlertInfo
-            status="warning"
-            contentLabel={
-              <>
-                Your workspace collected{' '}
-                <strong>{storageLimitPercentage}%</strong> of your total storage
-                allowed. Upgrade your plan or delete some existing results to
-                continue collecting files from your user beyond this limit.
-              </>
-            }
-            buttonLabel="Upgrade"
-          />
-        </Flex>
-      )}
-      <Flex h="full" w="full">
+      <Flex h="full" w="full" bgColor={bgColor}>
         <Flex
           pos="absolute"
           zIndex={2}
           w="full"
-          bg={useColorModeValue('white', 'gray.900')}
           justifyContent="center"
           h="60px"
-          display={['none', 'flex']}
+          display={["none", "flex"]}
         >
           <HStack maxW="1600px" w="full" px="4">
             <Button
               as={Link}
-              colorScheme={!isAnalytics ? 'blue' : 'gray'}
-              variant={!isAnalytics ? 'outline' : 'ghost'}
+              colorScheme={!isAnalytics ? "orange" : "gray"}
+              variant={!isAnalytics ? "outline" : "ghost"}
               size="sm"
               href={`/typebots/${typebot?.id}/results`}
             >
               <Text>Submissions</Text>
               {(stats?.totalStarts ?? 0) > 0 && (
-                <Tag size="sm" colorScheme="blue" ml="1">
+                <Tag size="sm" colorScheme="orange" ml="1">
                   {stats?.totalStarts}
                 </Tag>
               )}
             </Button>
             <Button
               as={Link}
-              colorScheme={isAnalytics ? 'blue' : 'gray'}
-              variant={isAnalytics ? 'outline' : 'ghost'}
+              colorScheme={isAnalytics ? "orange" : "gray"}
+              variant={isAnalytics ? "outline" : "ghost"}
               href={`/typebots/${typebot?.id}/results/analytics`}
               size="sm"
             >
@@ -168,22 +113,30 @@ export const ResultsPage = () => {
             </Button>
           </HStack>
         </Flex>
-        <Flex pt={['10px', '60px']} w="full" justify="center">
+        <Flex pt={["10px", "60px"]} w="full" justify="center">
           {workspace &&
             publishedTypebot &&
             (isAnalytics ? (
-              <AnalyticsGraphContainer stats={stats} />
+              <AnalyticsGraphContainer
+                stats={stats}
+                timeFilter={timeFilter}
+                onTimeFilterChange={setTimeFilter}
+              />
             ) : (
               <ResultsProvider
+                timeFilter={timeFilter}
                 typebotId={publishedTypebot.typebotId}
                 totalResults={stats?.totalStarts ?? 0}
                 onDeleteResults={handleDeletedResults}
               >
-                <ResultsTableContainer />
+                <ResultsTableContainer
+                  timeFilter={timeFilter}
+                  onTimeFilterChange={setTimeFilter}
+                />
               </ResultsProvider>
             ))}
         </Flex>
       </Flex>
     </Flex>
-  )
-}
+  );
+};

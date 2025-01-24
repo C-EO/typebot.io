@@ -1,33 +1,34 @@
-import { Button, ButtonProps, Text, VStack } from '@chakra-ui/react'
-import { PlusIcon } from '@/components/icons'
-import { useRouter } from 'next/router'
-import { stringify } from 'qs'
-import React from 'react'
+import { PlusIcon } from "@/components/icons";
+import { Button, type ButtonProps, Text, VStack } from "@chakra-ui/react";
+import { useTranslate } from "@tolgee/react";
+import { useRouter } from "next/router";
+import { stringify } from "qs";
+import React from "react";
+import { useTypebotDnd } from "../TypebotDndProvider";
 
 export const CreateBotButton = ({
   folderId,
-  isFirstBot,
   ...props
-}: { folderId?: string; isFirstBot: boolean } & ButtonProps) => {
-  const router = useRouter()
+}: { folderId?: string } & ButtonProps) => {
+  const { t } = useTranslate();
+  const router = useRouter();
+  const { draggedTypebot } = useTypebotDnd();
 
   const handleClick = () =>
     router.push(
       `/typebots/create?${stringify({
-        isFirstBot: !isFirstBot ? undefined : isFirstBot,
         folderId,
-      })}`
-    )
+      })}`,
+    );
 
   return (
     <Button
-      mr={{ sm: 6 }}
-      mb={6}
-      style={{ width: '225px', height: '270px' }}
+      style={{ width: "225px", height: "270px" }}
       onClick={handleClick}
       paddingX={6}
-      whiteSpace={'normal'}
-      colorScheme="blue"
+      whiteSpace={"normal"}
+      colorScheme="orange"
+      opacity={draggedTypebot ? 0.3 : 1}
       {...props}
     >
       <VStack spacing="6">
@@ -39,9 +40,9 @@ export const CreateBotButton = ({
           textAlign="center"
           mt="6"
         >
-          Create a typebot
+          {t("folders.createTypebotButton.label")}
         </Text>
       </VStack>
     </Button>
-  )
-}
+  );
+};

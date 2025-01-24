@@ -1,5 +1,5 @@
-import { EditorPage } from '@/features/editor'
+import { EditorPage } from "@/features/editor/components/EditorPage";
 
 export default function Page() {
-  return <EditorPage />
+  return <EditorPage />;
 }

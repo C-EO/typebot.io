@@ -1,26 +1,23 @@
+import type { ChangePlanModalProps } from "@/features/billing/components/ChangePlanModal";
+import { ChangePlanModal } from "@/features/billing/components/ChangePlanModal";
 import {
   Alert,
   AlertIcon,
-  AlertProps,
-  Button,
+  type AlertProps,
   HStack,
   Text,
   useDisclosure,
-} from '@chakra-ui/react'
-import React from 'react'
-import { ChangePlanModal, LimitReached } from '@/features/billing'
+} from "@chakra-ui/react";
+import React from "react";
+
+type Props = AlertProps & Pick<ChangePlanModalProps, "type" | "excludedPlans">;
 
 export const UnlockPlanAlertInfo = ({
-  contentLabel,
-  buttonLabel = 'More info',
   type,
+  excludedPlans,
   ...props
-}: {
-  contentLabel: React.ReactNode
-  buttonLabel?: string
-  type?: LimitReached
-} & AlertProps) => {
-  const { isOpen, onOpen, onClose } = useDisclosure()
+}: Props) => {
+  const { isOpen, onClose } = useDisclosure();
   return (
     <Alert
       status="info"
@@ -31,17 +28,14 @@ export const UnlockPlanAlertInfo = ({
     >
       <HStack>
         <AlertIcon />
-        <Text>{contentLabel}</Text>
+        <Text>{props.children}</Text>
       </HStack>
-      <Button
-        colorScheme={props.status === 'warning' ? 'orange' : 'blue'}
-        onClick={onOpen}
-        flexShrink={0}
-        ml="2"
-      >
-        {buttonLabel}
-      </Button>
-      <ChangePlanModal isOpen={isOpen} onClose={onClose} type={type} />
+      <ChangePlanModal
+        isOpen={isOpen}
+        onClose={onClose}
+        type={type}
+        excludedPlans={excludedPlans}
+      />
     </Alert>
-  )
-}
+  );
+};

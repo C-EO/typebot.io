@@ -1,130 +1,108 @@
-<p>
-  <a href="https://typebot.io/#gh-light-mode-only" target="_blank">
-    <img src="./.github/images/readme-illustration-light.png" alt="Typebot illustration">
-  </a>
-  <a href="https://typebot.io/#gh-dark-mode-only" target="_blank">
-    <img src="./.github/images/readme-illustration-dark.png" alt="Typebot illustration">
-  </a>
+<br />
+<p align="center">
+<a href="https://typebot.io" target="_blank">
+  <img src="./.github/images/banner.png" alt="Typebot banner">
+</a>
 </p>
+<br />
+
+<p align="center">
+Typebot is an Fair Source chatbot builder. It allows you to create advanced chatbots visually, embed them anywhere on your web/mobile apps, and collect results in real-time
+</p>
+
+<p align="center">
+<a href="https://github.com/baptistearno/typebot.io/stargazers"><img src="https://img.shields.io/github/stars/baptistearno/typebot.io" alt="Github Stars"></a>
+</a>
+<a href="https://github.com/baptistearno/typebot.io/pulse"><img src="https://img.shields.io/github/commit-activity/m/baptistearno/typebot.io" alt="Commits per month"></a>
+<a href="https://docs.typebot.io/self-hosting/guides/docker">
+<img src="https://img.shields.io/docker/pulls/baptistearno/typebot-builder">
+</a>
+<a href="https://github.com/baptistearno/typebot.io/blob/main/LICENSE"><img src="https://img.shields.io/badge/license-AGPLv3-purple" alt="License">
+<a href="https://status.typebot.io"><img height="20px" src="https://betteruptime.com/status-badges/v1/monitor/a9kf.svg" alt="Uptime"></a>
+<a href="https://github.com/baptisteArno/typebot.io/issues/new?template=bug_report.md"><img src="https://img.shields.io/badge/Report a bug-Github-%231F80C0" alt="Report a bug"></a>
+<a href="https://typebot.io/discord"><img src="https://img.shields.io/badge/Join community-Discord-%23404EED" alt="Ask a question"></a>
+
+</p>
+
+<h3 align="center">
+  <b><a href="https://app.typebot.io/register">Try Typebot</a></b>
+  •
+  <b><a href="https://docs.typebot.io/">Docs</a></b>
+
+---
+
+## Builder demo
 
 https://user-images.githubusercontent.com/16015833/168876388-0310678d-080b-4eca-8633-e5cc4d7bd5d1.mp4
 
-Typebot is an open-source alternative to Landbot. It allows you to create conversational apps/forms (Lead qualification, Product launch, User onboarding, Customer support), embed them anywhere on your web/mobile apps, and collect results in real-time.
-
 ## Features
 
-- Text, image, video bubble messages
-- Text, URL, email, phone number, date... input fields
-- Native integrations including Google Sheets, Webhooks, Send email (more to come)
-- Conditional branching, URL redirections
-- Beautiful animations
-- Theme is 100% customizable
-- Embed as a container, popup, or chat bubble easily with the native JS library
-- In-depth analytics
+Typebot makes it easy to create advanced chatbots. It provides the building block that are adaptable to any business use case. I improve Typebot regularly with bug fixes, new features, and performance improvements regularly.
 
-For more info, visit the [landing page](https://www.typebot.io)
+**Chat builder** with 34+ building blocks such as:
 
-## Stay up-to-date
+- 💬 Bubbles: Text, Image / GIF, video, audio, embed.
+- 🔤 Inputs: Text, email, phone number, buttons, picture choice, date picker, payment (Stripe), file picker... inputs
+- 🧠 Logic: Conditional branching, URL redirections, scripting (Javascript), A/B testing
+- 🔌 Integrations: Webhook / HTTP requests, OpenAI, Google Sheets, Google Analytics, Meta Pixel, Zapier, Make.com, Chatwoot, More to come...
 
-Lots of new features are being implemented on a day-to-day basis. Make sure to hit the **Star** button and watch **Releases** to be notified of future features.
+**Theme** your chatbot to match your brand identity:
 
-<img src="./.github/images/star-project.gif" alt="Typebot illustration" style="border-radius: 10px" width="500">
+- 🎨 Customize the fonts, background, colors, roundness, shadows, and more
+- 💪 Advanced theming with custom CSS.
+- 💾 Reusable theme templates
+
+**Share** your typebot anywhere:
+
+- 🔗 Custom domain
+- 👨‍💻 Embed as a container, popup, or chat bubble easily with the native JS library.
+- ⚡ Blazing fast embed lib. No iframe, no external dependencies, no performance impact.
+- 💻 Executable with HTTP requests
+
+Collect your **Results** and get insights:
+
+- 📊 In-depth analytics with drop-off rates, completion rates, and more
+- 📥 Export results to CSV
+
+Built for **developers**:
+
+- 🔓 No vendor-locking. Features built with flexibility in mind.
+- 💻 Easy-to-use [APIs](https://docs.typebot.io/api-reference).
 
 ## Getting started with Typebot
 
-The easiest way to get started with Typebot is with [the official managed service in the Cloud](https://app.typebot.io).
+The easiest way to get started with Typebot is with [the official managed service in the Cloud](https://app.typebot.io). You'll have high availability, backups, security, and maintenance all managed for you by me, [Baptiste, Typebot's founder](https://twitter.com/baptisteArno).
 
-It takes 1 minute to try out the builder for free. You'll have high availability, backups, security, and maintenance all managed for you by me, Baptiste, Typebot's founder.
+The cloud version can save a substantial amount of developer time and resources. For most sites this ends up being the best value option and the revenue goes to funding the maintenance and further development of Typebot.
+So you’ll be supporting fair source software and getting a great service! 💙
 
-That's also the best way to support my work, open-source software, and you'll get great service!
+## Support & Community
+
+You'll find a lot of resources to help you get started with Typebot in the [documentation](https://docs.typebot.io/).
+
+- Have a question? Join the [Discord server](https://typebot.io/discord) and get instant help.
+- Found a bug? [Create an issue](https://github.com/baptisteArno/typebot.io/issues/new)
 
 ## Self-hosting
 
-Interested in self-hosting Typebot on your server? Take a look at the [self-hosting installation instructions](https://docs.typebot.io/self-hosting).
+Interested in self-hosting Typebot on your server? Take a look at the [self-hosting installation instructions](https://docs.typebot.io/self-hosting/get-started).
 
-## Local setup
+## How to Contribute
 
-1. Clone the repo
+You are awesome, lets build great software together. Head over to the [Contribute docs](https://docs.typebot.io/contribute/overview) to get started. 💪
 
-   ```sh
-   git clone https://github.com/baptisteArno/typebot.io.git
-   ```
+## Run the project locally
 
-2. Install dependencies
+Follow the [Local installation](https://docs.typebot.io/contribute/guides/local-installation) section of in the Contributing docs.
 
-   ```sh
-   cd typebot.io
-   pnpm i
-   ```
+### Top contributors
 
-3. Set up environment variables
+<a href="https://github.com/baptistearno/typebot.io/graphs/contributors">
+  <img src="https://contrib.rocks/image?repo=baptistearno/typebot.io" />
+</a>
 
-   Copy `apps/builder/.env.local.example` to `apps/builder/.env.local`
-
-   Copy `apps/viewer/.env.local.example` to `apps/viewer/.env.local`
-
-   Copy `packages/db/.env.example` to `packages/db/.env`
-
-   Check out the [Configuration guide](https://docs.typebot.io/self-hosting/configuration) if you want to enable more options
-
-4. Make sure you have [Docker](https://docs.docker.com/compose/install/) running
-5. Start the builder and viewer
-
-   ```sh
-   pnpm dev
-   ```
-
-   Builder is available at `http://localhost:3000`
-
-   Viewer is available at `http://localhost:3001`
-
-   Database inspector is available at `http://localhost:5555`
-
-   By default, you can easily authenticate in the builder using the "Github Sign In" button. For other options, check out the [Configuration guide](https://docs.typebot.io/self-hosting/configuration)
-
-6. (Optionnal) Start the landing page
-
-   Copy `apps/landing-page/.env.local.example` to `apps/landing-page/.env.local`
-
-   ```sh
-   cd apps/landing-page
-   pnpm dev
-   ```
-
-7. (Optionnal) Start the docs
-
-   ```sh
-   cd apps/docs
-   pnpm start
-   ```
-
-## Contribute
-
-Another great way to support Typebot is to contribute to the project. Head over to the [Contribute guidelines](https://github.com/baptisteArno/typebot.io/blob/main/CONTRIBUTING.md) to get started. 😍
-
-## Technology
-
-Typebot is a Monorepo powered by [Turborepo](https://turborepo.org/). It is composed of 2 main applications:
-
-- the builder, where you build your typebots
-- the viewer, where your user answer the typebot
-
-These apps are built with awesome web technologies including [Typescript](https://www.typescriptlang.org/), [Next.js](https://nextjs.org/), [Prisma](https://www.prisma.io/), [Chakra UI](https://chakra-ui.com/), [Tailwind CSS](https://tailwindcss.com/).
+Made with [contrib.rocks](https://contrib.rocks).
 
 ## License
 
-Typebot is open-source under the GNU Affero General Public License Version 3 (AGPLv3). You can find it [here](./LICENSE).
-
-The goal of the AGPL license is to:
-
-- Maximize user freedom and to encourage companies to contribute to open source.
-- Prevent corporations from taking our code and using it as part of their closed-source proprietary products
-- Prevent corporations from offering Typebot as a service without contributing to the open source project
-- Prevent corporations from confusing people and making them think that the service they sell is in any shape or form approved by the original team
-
-In a few words, to use Typebot in your company, you need to:
-
-- Open source and publish your modifications
-- If you commercialize your version of Typebot, be clear and provide a prominent mention and link to the original project so people that are considering using their version of the software can be aware of the original project.
-
-If you'd like to use Typebot without open-sourcing your modified code, you can purchase a commercial license to remove the copyleft restrictions and in that way support the original project. Contact me at baptiste@typebot.io.
+Typebot's code is protected under a Functional Source License. You will find more information about the license and how to comply with it [here](https://docs.typebot.io/self-hosting#license-requirements).

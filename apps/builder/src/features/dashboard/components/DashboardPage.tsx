@@ -1,46 +1,77 @@
-import { Seo } from '@/components/Seo'
-import { useUser } from '@/features/account'
-import { upgradePlanQuery } from '@/features/billing'
-import { TypebotDndProvider, FolderContent } from '@/features/folders'
-import { useWorkspace } from '@/features/workspace'
-import { Stack, VStack, Spinner, Text } from '@chakra-ui/react'
-import { Plan } from 'db'
-import { useRouter } from 'next/router'
-import { useState, useEffect } from 'react'
-import { DashboardHeader } from './DashboardHeader'
+import { Seo } from "@/components/Seo";
+import { useUser } from "@/features/account/hooks/useUser";
+import {
+  PreCheckoutModal,
+  type PreCheckoutModalProps,
+} from "@/features/billing/components/PreCheckoutModal";
+import { TypebotDndProvider } from "@/features/folders/TypebotDndProvider";
+import { FolderContent } from "@/features/folders/components/FolderContent";
+import { ParentModalProvider } from "@/features/graph/providers/ParentModalProvider";
+import { useWorkspace } from "@/features/workspace/WorkspaceProvider";
+import { trpc } from "@/lib/trpc";
+import { Spinner, Stack, Text, VStack } from "@chakra-ui/react";
+import { useTranslate } from "@tolgee/react";
+import type { Plan } from "@typebot.io/prisma/enum";
+import { useRouter } from "next/router";
+import { useEffect, useState } from "react";
+import { DashboardHeader } from "./DashboardHeader";
 
 export const DashboardPage = () => {
-  const [isLoading, setIsLoading] = useState(false)
-  const { query } = useRouter()
-  const { user } = useUser()
-  const { workspace } = useWorkspace()
+  const { t } = useTranslate();
+  const [isLoading, setIsLoading] = useState(false);
+  const router = useRouter();
+  const { user } = useUser();
+  const { workspace } = useWorkspace();
+  const [preCheckoutPlan, setPreCheckoutPlan] =
+    useState<PreCheckoutModalProps["selectedSubscription"]>();
+  const { mutate: createCustomCheckoutSession } =
+    trpc.billing.createCustomCheckoutSession.useMutation({
+      onSuccess: (data) => {
+        router.push(data.checkoutUrl);
+      },
+    });
 
   useEffect(() => {
-    const { subscribePlan, chats, storage } = query as {
-      subscribePlan: Plan | undefined
-      chats: string | undefined
-      storage: string | undefined
-    }
-    if (workspace && subscribePlan && user && workspace.plan === 'FREE') {
-      setIsLoading(true)
-      upgradePlanQuery({
-        user,
-        plan: subscribePlan,
+    const { subscribePlan, claimCustomPlan } = router.query as {
+      subscribePlan: Plan | undefined;
+      chats: string | undefined;
+      claimCustomPlan: string | undefined;
+    };
+    if (claimCustomPlan && user?.email && workspace) {
+      setIsLoading(true);
+      createCustomCheckoutSession({
+        email: user.email,
         workspaceId: workspace.id,
-        additionalChats: chats ? parseInt(chats) : 0,
-        additionalStorage: storage ? parseInt(storage) : 0,
-      })
+        returnUrl: `${window.location.origin}/typebots`,
+      });
     }
-  }, [query, user, workspace])
+    if (workspace && subscribePlan && user && workspace.plan === "FREE") {
+      setIsLoading(true);
+      setPreCheckoutPlan({
+        plan: subscribePlan as "PRO" | "STARTER",
+        workspaceId: workspace.id,
+      });
+    }
+  }, [createCustomCheckoutSession, router.query, user, workspace]);
 
   return (
     <Stack minH="100vh">
-      <Seo title={workspace?.name ?? 'My typebots'} />
+      <Seo title={workspace?.name ?? t("dashboard.title")} />
       <DashboardHeader />
+      {!workspace?.stripeId && (
+        <ParentModalProvider>
+          <PreCheckoutModal
+            selectedSubscription={preCheckoutPlan}
+            existingEmail={user?.email ?? undefined}
+            existingCompany={workspace?.name ?? undefined}
+            onClose={() => setPreCheckoutPlan(undefined)}
+          />
+        </ParentModalProvider>
+      )}
       <TypebotDndProvider>
         {isLoading ? (
           <VStack w="full" justifyContent="center" pt="10" spacing={6}>
-            <Text>You are being redirected...</Text>
+            <Text>{t("dashboard.redirectionMessage")}</Text>
             <Spinner />
           </VStack>
         ) : (
@@ -48,5 +79,5 @@ export const DashboardPage = () => {
         )}
       </TypebotDndProvider>
     </Stack>
-  )
-}
+  );
+};

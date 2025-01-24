@@ -1,43 +1,44 @@
-import { useTypebot } from '@/features/editor'
-import { useUser } from '@/features/account'
-import { useWorkspace } from '@/features/workspace'
-import React, { useEffect, useState } from 'react'
-import { initBubble } from 'typebot-js'
-import { isCloudProdInstance } from '@/utils/helpers'
-import { planToReadable } from '@/features/billing'
+import { useUser } from "@/features/account/hooks/useUser";
+import { planToReadable } from "@/features/billing/helpers/planToReadable";
+import { useTypebot } from "@/features/editor/providers/TypebotProvider";
+import { useWorkspace } from "@/features/workspace/WorkspaceProvider";
+import type { BubbleProps } from "@typebot.io/js";
+import { Bubble } from "@typebot.io/nextjs";
+import { Plan } from "@typebot.io/prisma/enum";
+import { useEffect, useState } from "react";
 
-export const SupportBubble = () => {
-  const { typebot } = useTypebot()
-  const { user } = useUser()
-  const { workspace } = useWorkspace()
-  const [localTypebotId, setLocalTypebotId] = useState(typebot?.id)
-  const [localUserId, setLocalUserId] = useState(user?.id)
+export const SupportBubble = (props: Omit<BubbleProps, "typebot">) => {
+  const { typebot } = useTypebot();
+  const { user } = useUser();
+  const { workspace } = useWorkspace();
+
+  const [lastViewedTypebotId, setLastViewedTypebotId] = useState(typebot?.id);
 
   useEffect(() => {
-    if (
-      isCloudProdInstance &&
-      (localTypebotId !== typebot?.id || localUserId !== user?.id)
-    ) {
-      setLocalTypebotId(typebot?.id)
-      setLocalUserId(user?.id)
-      initBubble({
-        url: `https://viewer.typebot.io/typebot-support`,
-        backgroundColor: '#ffffff',
-        button: {
-          color: '#0042DA',
-        },
-        hiddenVariables: {
-          'User ID': user?.id,
-          'First name': user?.name?.split(' ')[0] ?? undefined,
-          Email: user?.email ?? undefined,
-          'Typebot ID': typebot?.id,
-          'Avatar URL': user?.image ?? undefined,
-          Plan: planToReadable(workspace?.plan),
-        },
-      })
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user, typebot])
+    if (!typebot?.id) return;
+    if (lastViewedTypebotId === typebot?.id) return;
+    setLastViewedTypebotId(typebot?.id);
+  }, [lastViewedTypebotId, typebot?.id]);
 
-  return <></>
-}
+  if (!workspace?.plan || workspace.plan === Plan.FREE) return null;
+
+  return (
+    <Bubble
+      typebot="typebot-support"
+      prefilledVariables={{
+        "User ID": user?.id,
+        "First name": user?.name?.split(" ")[0] ?? undefined,
+        Email: user?.email ?? undefined,
+        "Typebot ID": lastViewedTypebotId,
+        "Avatar URL": user?.image ?? undefined,
+        Plan: planToReadable(workspace?.plan),
+      }}
+      theme={{
+        chatWindow: {
+          backgroundColor: "#fff",
+        },
+      }}
+      {...props}
+    />
+  );
+};

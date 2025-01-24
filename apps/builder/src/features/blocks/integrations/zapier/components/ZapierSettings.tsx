@@ -1,31 +1,37 @@
-import {
-  Alert,
-  AlertIcon,
-  Button,
-  Input,
-  Link,
-  Stack,
-  Text,
-} from '@chakra-ui/react'
-import { ExternalLinkIcon } from '@/components/icons'
-import { useTypebot } from '@/features/editor'
-import { ZapierBlock } from 'models'
-import React from 'react'
-import { byId } from 'utils'
+import { ExternalLinkIcon } from "@/components/icons";
+import { Alert, AlertIcon, Button, Link, Stack, Text } from "@chakra-ui/react";
+import type {
+  HttpRequest,
+  HttpRequestBlock,
+} from "@typebot.io/blocks-integrations/httpRequest/schema";
+import type { ZapierBlock } from "@typebot.io/blocks-integrations/zapier/schema";
+import React from "react";
+import { HttpRequestAdvancedConfigForm } from "../../httpRequest/components/HttpRequestAdvancedConfigForm";
 
 type Props = {
-  block: ZapierBlock
-}
+  block: ZapierBlock;
+  onOptionsChange: (options: HttpRequestBlock["options"]) => void;
+};
 
-export const ZapierSettings = ({ block }: Props) => {
-  const { webhooks } = useTypebot()
-  const webhook = webhooks.find(byId(block.webhookId))
+export const ZapierSettings = ({
+  block: { id: blockId, options },
+  onOptionsChange,
+}: Props) => {
+  const setLocalWebhook = async (newLocalWebhook: HttpRequest) => {
+    onOptionsChange({
+      ...options,
+      webhook: newLocalWebhook,
+    });
+    return;
+  };
+
+  const url = options?.webhook?.url;
 
   return (
     <Stack spacing={4}>
-      <Alert status={webhook?.url ? 'success' : 'info'} rounded="md">
+      <Alert status={url ? "success" : "info"} rounded="md">
         <AlertIcon />
-        {webhook?.url ? (
+        {url ? (
           <>Your zap is correctly configured 🚀</>
         ) : (
           <Stack>
@@ -34,14 +40,20 @@ export const ZapierSettings = ({ block }: Props) => {
               as={Link}
               href="https://zapier.com/apps/typebot/integrations"
               isExternal
-              colorScheme="blue"
+              colorScheme="orange"
             >
               <Text mr="2">Zapier</Text> <ExternalLinkIcon />
             </Button>
           </Stack>
         )}
       </Alert>
-      {webhook?.url && <Input value={webhook?.url} isDisabled />}
+      <HttpRequestAdvancedConfigForm
+        blockId={blockId}
+        httpRequest={options?.webhook}
+        options={options}
+        onHttpRequestChange={setLocalWebhook}
+        onOptionsChange={onOptionsChange}
+      />
     </Stack>
-  )
-}
+  );
+};

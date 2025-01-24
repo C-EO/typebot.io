@@ -1,9 +1,9 @@
-import Link, { LinkProps } from 'next/link'
-import React from 'react'
-import { chakra, HStack, TextProps } from '@chakra-ui/react'
-import { ExternalLinkIcon } from '@/components/icons'
+import { ExternalLinkIcon } from "@/components/icons";
+import { HStack, type TextProps, chakra } from "@chakra-ui/react";
+import Link, { type LinkProps } from "next/link";
+import React from "react";
 
-type TextLinkProps = LinkProps & TextProps & { isExternal?: boolean }
+type TextLinkProps = LinkProps & TextProps & { isExternal?: boolean };
 
 export const TextLink = ({
   children,
@@ -13,6 +13,7 @@ export const TextLink = ({
   scroll,
   prefetch,
   isExternal,
+  noOfLines,
   ...textProps
 }: TextLinkProps) => (
   <Link
@@ -21,12 +22,14 @@ export const TextLink = ({
     replace={replace}
     scroll={scroll}
     prefetch={prefetch}
-    target={isExternal ? '_blank' : undefined}
+    target={isExternal ? "_blank" : undefined}
   >
     <chakra.span textDecor="underline" display="inline-block" {...textProps}>
       {isExternal ? (
-        <HStack spacing={1}>
-          <chakra.span>{children}</chakra.span>
+        <HStack as="span" spacing={1}>
+          <chakra.span noOfLines={noOfLines} maxW="100%">
+            {children}
+          </chakra.span>
           <ExternalLinkIcon />
         </HStack>
       ) : (
@@ -34,4 +37,4 @@ export const TextLink = ({
       )}
     </chakra.span>
   </Link>
-)
+);

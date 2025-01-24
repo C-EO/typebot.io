@@ -1,4 +1,3 @@
-import { useRef, useState } from 'react'
 import {
   AlertDialog,
   AlertDialogBody,
@@ -7,17 +6,19 @@ import {
   AlertDialogHeader,
   AlertDialogOverlay,
   Button,
-} from '@chakra-ui/react'
+} from "@chakra-ui/react";
+import { useTranslate } from "@tolgee/react";
+import { useRef, useState } from "react";
 
 type ConfirmDeleteModalProps = {
-  isOpen: boolean
-  onConfirm: () => Promise<unknown>
-  onClose: () => void
-  message: JSX.Element
-  title?: string
-  confirmButtonLabel: string
-  confirmButtonColor?: 'blue' | 'red'
-}
+  isOpen: boolean;
+  onConfirm: () => Promise<unknown> | unknown;
+  onClose: () => void;
+  message: JSX.Element;
+  title?: string;
+  confirmButtonLabel: string;
+  confirmButtonColor?: "blue" | "red";
+};
 
 export const ConfirmModal = ({
   title,
@@ -26,22 +27,23 @@ export const ConfirmModal = ({
   onClose,
   confirmButtonLabel,
   onConfirm,
-  confirmButtonColor = 'red',
+  confirmButtonColor = "red",
 }: ConfirmDeleteModalProps) => {
-  const [confirmLoading, setConfirmLoading] = useState(false)
-  const cancelRef = useRef(null)
+  const { t } = useTranslate();
+  const [confirmLoading, setConfirmLoading] = useState(false);
+  const cancelRef = useRef(null);
 
   const onConfirmClick = async () => {
-    setConfirmLoading(true)
+    setConfirmLoading(true);
     try {
-      await onConfirm()
+      await onConfirm();
     } catch (e) {
-      setConfirmLoading(false)
-      return setConfirmLoading(false)
+      setConfirmLoading(false);
+      return setConfirmLoading(false);
     }
-    setConfirmLoading(false)
-    onClose()
-  }
+    setConfirmLoading(false);
+    onClose();
+  };
 
   return (
     <AlertDialog
@@ -52,14 +54,14 @@ export const ConfirmModal = ({
       <AlertDialogOverlay>
         <AlertDialogContent>
           <AlertDialogHeader fontSize="lg" fontWeight="bold">
-            {title ?? 'Are you sure?'}
+            {title ?? t("confirmModal.defaultTitle")}
           </AlertDialogHeader>
 
           <AlertDialogBody>{message}</AlertDialogBody>
 
           <AlertDialogFooter>
             <Button ref={cancelRef} onClick={onClose}>
-              Cancel
+              {t("cancel")}
             </Button>
             <Button
               colorScheme={confirmButtonColor}
@@ -73,5 +75,5 @@ export const ConfirmModal = ({
         </AlertDialogContent>
       </AlertDialogOverlay>
     </AlertDialog>
-  )
-}
+  );
+};

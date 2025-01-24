@@ -1,0 +1,19 @@
+{
+  "name": "@typebot.io/telemetry",
+  "version": "0.0.1",
+  "type": "module",
+  "private": true,
+  "exports": {
+    "./*": "./src/*.ts"
+  },
+  "dependencies": {
+    "@typebot.io/env": "workspace:*",
+    "@typebot.io/prisma": "workspace:*",
+    "@typebot.io/zod": "workspace:*",
+    "ky": "1.2.4",
+    "posthog-node": "3.1.1"
+  },
+  "devDependencies": {
+    "@typebot.io/tsconfig": "workspace:*"
+  }
+}

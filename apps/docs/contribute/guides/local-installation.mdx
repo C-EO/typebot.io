@@ -1,0 +1,53 @@
+---
+title: 'Install the project locally'
+sidebarTitle: 'Local installation'
+image: '/images/contribute/writing-robot.png'
+icon: 'laptop'
+---
+
+## Get started
+
+1. [Fork](https://help.github.com/articles/fork-a-repo/) this repository to your
+   own GitHub account and then
+   [clone](https://help.github.com/articles/cloning-a-repository/) it to your local device.
+
+## Running the project locally
+
+1. Make sure you have node, [bun](https://bun.sh/docs/installation) and [docker](https://docs.docker.com/compose/install/) installed. For node, I suggest you use [`proto`](https://moonrepo.dev/proto) or [`nvm`](https://github.com/nvm-sh/nvm) allowing you to manage different versions. It should then autodetect which version need to be installed before running any command.
+
+2. Install dependencies
+
+   ```sh
+   cd typebot.io
+   bun install
+   ```
+
+3. Set up environment variables
+
+   Copy `.env.dev.example` to `.env`
+
+   Check out the [Configuration guide](https://docs.typebot.io/self-hosting/configuration) if you want to enable more options
+
+4. If you use the default DATABASE_URL, you need a matching database running. You can do that easily with the provided `docker-compose.dev.yml` file:
+
+   ```sh
+   docker compose -f docker-compose.dev.yml up -d
+   ```
+
+5. Start the builder and viewer
+
+   ```sh
+   bunx turbo dev --filter=builder... --filter=viewer...
+   ```
+
+   Builder is available at [`http://localhost:3000`](http://localhost:3000)
+
+   Viewer is available at [`http://localhost:3001`](http://localhost:3001)
+
+   By default, you can easily authenticate in the builder using the "Github Sign In" button. For other options, check out the [Configuration guide](https://docs.typebot.io/self-hosting/configuration)
+
+6. Optionnally you can also run the other available apps:
+
+    ```sh
+    bunx turbo dev --filter=builder... --filter=viewer... --filter=@typebot.io/prisma... --filter=landing-page... --filter=docs...
+    ```

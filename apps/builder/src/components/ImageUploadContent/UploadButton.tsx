@@ -1,54 +1,83 @@
-import { compressFile } from '@/utils/helpers'
-import { Button, ButtonProps, chakra } from '@chakra-ui/react'
-import { ChangeEvent, useState } from 'react'
-import { uploadFiles } from 'utils'
+import type { FilePathUploadProps } from "@/features/upload/api/generateUploadUrl";
+import { compressFile } from "@/helpers/compressFile";
+import { useToast } from "@/hooks/useToast";
+import { trpc } from "@/lib/trpc";
+import { Button, type ButtonProps, chakra } from "@chakra-ui/react";
+import type { ChangeEvent } from "react";
+import { useId, useState } from "react";
 
 type UploadButtonProps = {
-  fileType: 'image' | 'audio'
-  filePath: string
-  includeFileName?: boolean
-  onFileUploaded: (url: string) => void
-} & ButtonProps
+  fileType: "image" | "audio";
+  filePathProps: FilePathUploadProps;
+  onFileUploaded: (url: string) => void;
+} & ButtonProps;
 
 export const UploadButton = ({
   fileType,
-  filePath,
-  includeFileName,
+  filePathProps,
   onFileUploaded,
   ...props
 }: UploadButtonProps) => {
-  const [isUploading, setIsUploading] = useState(false)
+  const id = useId();
+  const [isUploading, setIsUploading] = useState(false);
+  const { showToast } = useToast();
+  const [file, setFile] = useState<File>();
+
+  const { mutate } = trpc.generateUploadUrl.useMutation({
+    onSettled: () => {
+      setIsUploading(false);
+    },
+    onSuccess: async (data) => {
+      if (!file) return;
+      const formData = new FormData();
+      Object.entries(data.formData).forEach(([key, value]) => {
+        formData.append(key, value);
+      });
+      formData.append("file", file);
+      const upload = await fetch(data.presignedUrl, {
+        method: "POST",
+        body: formData,
+      });
+
+      if (!upload.ok) {
+        showToast({ description: "Error while trying to upload the file." });
+        return;
+      }
+
+      onFileUploaded(data.fileUrl + "?v=" + Date.now());
+    },
+  });
 
   const handleInputChange = async (e: ChangeEvent<HTMLInputElement>) => {
-    if (!e.target?.files) return
-    setIsUploading(true)
-    const file = e.target.files[0]
-    const urls = await uploadFiles({
-      files: [
-        {
-          file: await compressFile(file),
-          path: `public/${filePath}${includeFileName ? `/${file.name}` : ''}`,
-        },
-      ],
-    })
-    if (urls.length && urls[0]) onFileUploaded(urls[0] + '?v=' + Date.now())
-    setIsUploading(false)
-  }
+    if (!e.target?.files) return;
+    setIsUploading(true);
+    const file = e.target.files[0] as File | undefined;
+    if (!file)
+      return showToast({
+        description: "Could not read file.",
+        status: "error",
+      });
+    setFile(await compressFile(file));
+    mutate({
+      filePathProps,
+      fileType: file.type,
+    });
+  };
 
   return (
     <>
       <chakra.input
         data-testid="file-upload-input"
         type="file"
-        id="file-input"
+        id={`file-input-${id}`}
         display="none"
         onChange={handleInputChange}
-        accept={fileType === 'image' ? '.jpg, .jpeg, .png, .gif' : '.mp3, .wav'}
+        accept={fileType === "image" ? "image/*" : "audio/*"}
       />
       <Button
         as="label"
         size="sm"
-        htmlFor="file-input"
+        htmlFor={`file-input-${id}`}
         cursor="pointer"
         isLoading={isUploading}
         {...props}
@@ -56,5 +85,5 @@ export const UploadButton = ({
         {props.children}
       </Button>
     </>
-  )
-}
+  );
+};

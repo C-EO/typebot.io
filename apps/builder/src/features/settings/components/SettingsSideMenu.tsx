@@ -1,58 +1,76 @@
 import {
+  ChatIcon,
+  CodeIcon,
+  LockedIcon,
+  MoreVerticalIcon,
+} from "@/components/icons";
+import { useTypebot } from "@/features/editor/providers/TypebotProvider";
+import {
   Accordion,
   AccordionButton,
   AccordionIcon,
   AccordionItem,
   AccordionPanel,
-  Heading,
   HStack,
+  Heading,
   Stack,
-} from '@chakra-ui/react'
-import { ChatIcon, CodeIcon, MoreVerticalIcon } from '@/components/icons'
-import { GeneralSettings, Metadata, TypingEmulation } from 'models'
-import React from 'react'
-import { GeneralSettingsForm } from './GeneralSettingsForm'
-import { MetadataForm } from './MetadataForm'
-import { TypingEmulationForm } from './TypingEmulationForm'
-import { headerHeight, useTypebot } from '@/features/editor'
+  useColorModeValue,
+} from "@chakra-ui/react";
+import type { Settings } from "@typebot.io/settings/schemas";
+import React from "react";
+import { GeneralSettingsForm } from "./GeneralSettingsForm";
+import { MetadataForm } from "./MetadataForm";
+import { SecurityForm } from "./SecurityForm";
+import { TypingEmulationForm } from "./TypingEmulationForm";
 
 export const SettingsSideMenu = () => {
-  const { typebot, updateTypebot } = useTypebot()
+  const { typebot, updateTypebot } = useTypebot();
 
-  const handleTypingEmulationChange = (typingEmulation: TypingEmulation) =>
+  const updateTypingEmulation = (
+    typingEmulation: Settings["typingEmulation"],
+  ) =>
     typebot &&
-    updateTypebot({ settings: { ...typebot.settings, typingEmulation } })
+    updateTypebot({
+      updates: { settings: { ...typebot.settings, typingEmulation } },
+    });
 
-  const handleGeneralSettingsChange = (general: GeneralSettings) =>
-    typebot && updateTypebot({ settings: { ...typebot.settings, general } })
+  const updateSecurity = (security: Settings["security"]) =>
+    typebot &&
+    updateTypebot({
+      updates: { settings: { ...typebot.settings, security } },
+    });
 
-  const handleMetadataChange = (metadata: Metadata) =>
-    typebot && updateTypebot({ settings: { ...typebot.settings, metadata } })
+  const handleGeneralSettingsChange = (general: Settings["general"]) =>
+    typebot &&
+    updateTypebot({ updates: { settings: { ...typebot.settings, general } } });
+
+  const handleMetadataChange = (metadata: Settings["metadata"]) =>
+    typebot &&
+    updateTypebot({ updates: { settings: { ...typebot.settings, metadata } } });
 
   return (
     <Stack
       flex="1"
       maxW="400px"
-      height={`calc(100vh - ${headerHeight}px)`}
-      borderRightWidth={1}
-      pt={10}
-      spacing={10}
-      overflowY="scroll"
+      h={`calc(100% - 2rem)`}
+      borderWidth={1}
+      ml={4}
+      overflowY="auto"
       pb="20"
+      position="relative"
+      rounded="xl"
+      bg={useColorModeValue("white", "gray.900")}
     >
-      <Heading fontSize="xl" textAlign="center">
-        Settings
-      </Heading>
-      <Accordion allowMultiple defaultIndex={[0]}>
-        <AccordionItem>
-          <AccordionButton py={6}>
+      <Accordion allowMultiple borderBottomWidth={0} defaultIndex={[0]}>
+        <AccordionItem borderTopWidth={0}>
+          <AccordionButton py={4}>
             <HStack flex="1" pl={2}>
-              <MoreVerticalIcon transform={'rotate(90deg)'} />
-              <Heading fontSize="lg">General</Heading>
+              <MoreVerticalIcon transform={"rotate(90deg)"} />
+              <Heading fontSize="md">General</Heading>
             </HStack>
             <AccordionIcon />
           </AccordionButton>
-          <AccordionPanel pb={4} px="6">
+          <AccordionPanel>
             {typebot && (
               <GeneralSettingsForm
                 generalSettings={typebot.settings.general}
@@ -62,33 +80,51 @@ export const SettingsSideMenu = () => {
           </AccordionPanel>
         </AccordionItem>
         <AccordionItem>
-          <AccordionButton py={6}>
+          <AccordionButton py={4}>
             <HStack flex="1" pl={2}>
               <ChatIcon />
-              <Heading fontSize="lg">Typing emulation</Heading>
+              <Heading fontSize="md">Typing</Heading>
             </HStack>
             <AccordionIcon />
           </AccordionButton>
-          <AccordionPanel pb={4} px="6">
+          <AccordionPanel>
             {typebot && (
               <TypingEmulationForm
                 typingEmulation={typebot.settings.typingEmulation}
-                onUpdate={handleTypingEmulationChange}
+                onUpdate={updateTypingEmulation}
               />
             )}
           </AccordionPanel>
         </AccordionItem>
         <AccordionItem>
-          <AccordionButton py={6}>
+          <AccordionButton py={4}>
             <HStack flex="1" pl={2}>
-              <CodeIcon />
-              <Heading fontSize="lg">Metadata</Heading>
+              <LockedIcon />
+              <Heading fontSize="md">Security</Heading>
             </HStack>
             <AccordionIcon />
           </AccordionButton>
-          <AccordionPanel pb={4} px="6">
+          <AccordionPanel>
+            {typebot && (
+              <SecurityForm
+                security={typebot.settings.security}
+                onUpdate={updateSecurity}
+              />
+            )}
+          </AccordionPanel>
+        </AccordionItem>
+        <AccordionItem>
+          <AccordionButton py={4}>
+            <HStack flex="1" pl={2}>
+              <CodeIcon />
+              <Heading fontSize="md">Metadata</Heading>
+            </HStack>
+            <AccordionIcon />
+          </AccordionButton>
+          <AccordionPanel>
             {typebot && (
               <MetadataForm
+                workspaceId={typebot.workspaceId}
                 typebotId={typebot.id}
                 typebotName={typebot.name}
                 metadata={typebot.settings.metadata}
@@ -99,5 +135,5 @@ export const SettingsSideMenu = () => {
         </AccordionItem>
       </Accordion>
     </Stack>
-  )
-}
+  );
+};

@@ -1,18 +1,13 @@
-import { customTheme } from '@/lib/theme'
-import { ColorModeScript } from '@chakra-ui/react'
-import { Html, Head, Main, NextScript } from 'next/document'
+import { ColorModeScript } from "@chakra-ui/react";
+import { customTheme } from "@typebot.io/ui/chakraTheme";
+import { Head, Html, Main, NextScript } from "next/document";
 
 const Document = () => (
-  <Html>
+  <Html translate="no">
     <Head>
-      <link rel="icon" type="image/png" href="/favicon.png" />
-      <link
-        href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&family=Open+Sans:wght@400;500;600;700&display=swap"
-        rel="stylesheet"
-      />
+      <link rel="icon" type="images/svg+xml" href="/favicon.svg" />
       <meta name="google" content="notranslate" />
-      {/* eslint-disable-next-line @next/next/no-sync-scripts */}
-      <script src="/__env.js" />
+      <script src="/__ENV.js" />
     </Head>
     <body>
       <ColorModeScript initialColorMode={customTheme.config.initialColorMode} />
@@ -20,6 +15,6 @@ const Document = () => (
       <NextScript />
     </body>
   </Html>
-)
+);
 
-export default Document
+export default Document;

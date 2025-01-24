@@ -1,153 +1,233 @@
+import { useToast } from "@/hooks/useToast";
 import {
   Button,
-  chakra,
-  Divider,
-  Heading,
   HStack,
+  Heading,
   Modal,
   ModalBody,
   ModalContent,
   ModalOverlay,
   Stack,
-  Tooltip,
-} from '@chakra-ui/react'
-import { ExternalLinkIcon } from '@/components/icons'
-import { TypebotViewer } from 'bot-engine'
-import { Typebot } from 'models'
-import React, { useCallback, useEffect, useState } from 'react'
-import { getViewerUrl, sendRequest } from 'utils'
-import { templates } from '../data'
-import { TemplateProps } from '../types'
-import { useToast } from '@/hooks/useToast'
-import { parseTypebotToPublicTypebot } from '@/features/publish'
+  Tag,
+  Text,
+  chakra,
+  useColorModeValue,
+} from "@chakra-ui/react";
+import { useTranslate } from "@tolgee/react";
+import { sendRequest } from "@typebot.io/lib/utils";
+import { Standard } from "@typebot.io/nextjs";
+import type { Typebot } from "@typebot.io/typebot/schemas/typebot";
+import React, { useCallback, useEffect, useState } from "react";
+import { useTemplates } from "../hooks/useTemplates";
+import type { TemplateProps } from "../types";
 
 type Props = {
-  isOpen: boolean
-  onClose: () => void
-  onTypebotChoose: (typebot: Typebot) => void
-}
+  isOpen: boolean;
+  onClose: () => void;
+  onTypebotChoose: (typebot: Typebot) => void;
+  isLoading: boolean;
+};
 
-export const TemplatesModal = ({ isOpen, onClose, onTypebotChoose }: Props) => {
-  const [typebot, setTypebot] = useState<Typebot>()
+export const TemplatesModal = ({
+  isOpen,
+  onClose,
+  onTypebotChoose,
+  isLoading,
+}: Props) => {
+  const { t } = useTranslate();
+  const templateCardBackgroundColor = useColorModeValue("white", "gray.900");
+  const [typebot, setTypebot] = useState<Typebot>();
+  const templates = useTemplates();
   const [selectedTemplate, setSelectedTemplate] = useState<TemplateProps>(
-    templates[0]
-  )
-  const [isLoading, setIsLoading] = useState(false)
-
-  const { showToast } = useToast()
+    templates[0],
+  );
+  const [isFirstTemplateLoaded, setIsFirstTemplateLoaded] = useState(false);
+  const { showToast } = useToast();
 
   const fetchTemplate = useCallback(
     async (template: TemplateProps) => {
-      setSelectedTemplate(template)
+      setSelectedTemplate(template);
       const { data, error } = await sendRequest(
-        `/templates/${template.fileName}`
-      )
+        `/templates/${template.fileName}`,
+      );
       if (error)
-        return showToast({ title: error.name, description: error.message })
-      setTypebot(data as Typebot)
+        return showToast({ title: error.name, description: error.message });
+      setTypebot({ ...(data as Typebot), name: template.name });
     },
-    [showToast]
-  )
+    [showToast],
+  );
 
   useEffect(() => {
-    fetchTemplate(templates[0])
-  }, [fetchTemplate])
+    if (isFirstTemplateLoaded) return;
+    setIsFirstTemplateLoaded(true);
+    fetchTemplate(templates[0]);
+  }, [fetchTemplate, templates, isFirstTemplateLoaded]);
 
-  const onUseThisTemplateClick = () => {
-    if (!typebot) return
-    onTypebotChoose(typebot)
-    setIsLoading(true)
-  }
+  const onUseThisTemplateClick = async () => {
+    if (!typebot) return;
+    onTypebotChoose(typebot);
+  };
 
   return (
     <Modal
       isOpen={isOpen}
       onClose={onClose}
-      size="6xl"
       blockScrollOnMount={false}
+      size="6xl"
     >
       <ModalOverlay />
       <ModalContent h="85vh">
-        <ModalBody as={HStack} p="0" spacing="0">
-          <Stack w="full" h="full" spacing="4">
-            <Heading pl="10" pt="4" fontSize="2xl">
-              {selectedTemplate.emoji}{' '}
-              <chakra.span ml="2">{selectedTemplate.name}</chakra.span>
-            </Heading>
-            {typebot && (
-              <TypebotViewer
-                apiHost={getViewerUrl()}
-                typebot={parseTypebotToPublicTypebot(typebot)}
-                key={typebot.id}
-                style={{ borderRadius: '0.25rem' }}
-              />
-            )}
-          </Stack>
-
+        <ModalBody h="full" as={HStack} p="0" spacing="0">
           <Stack
             h="full"
-            py="6"
             w="300px"
-            px="4"
-            borderLeftWidth={1}
+            py="4"
+            px="2"
+            borderRightWidth={1}
             justify="space-between"
+            flexShrink={0}
+            overflowY="auto"
           >
-            <Stack spacing={4}>
+            <Stack spacing={5}>
+              <Stack spacing={2}>
+                <Text fontSize="xs" fontWeight="medium" pl="1" color="gray.500">
+                  {t("templates.modal.menuHeading.marketing")}
+                </Text>
+                {templates
+                  .filter((template) => template.category === "marketing")
+                  .map((template) => (
+                    <Button
+                      size="sm"
+                      key={template.name}
+                      onClick={() => fetchTemplate(template)}
+                      w="full"
+                      variant={
+                        selectedTemplate.name === template.name
+                          ? "solid"
+                          : "ghost"
+                      }
+                      isDisabled={template.isComingSoon}
+                    >
+                      <HStack overflow="hidden" fontSize="sm" w="full">
+                        <Text>{template.emoji}</Text>
+                        <Text>{template.name}</Text>
+                        {template.isNew && (
+                          <Tag colorScheme="orange" size="sm" flexShrink={0}>
+                            {t("templates.modal.menuHeading.new.tag")}
+                          </Tag>
+                        )}
+                      </HStack>
+                    </Button>
+                  ))}
+              </Stack>
+              <Stack spacing={2}>
+                <Text fontSize="xs" fontWeight="medium" pl="1" color="gray.500">
+                  {t("templates.modal.menuHeading.product")}
+                </Text>
+                {templates
+                  .filter((template) => template.category === "product")
+                  .map((template) => (
+                    <Button
+                      size="sm"
+                      key={template.name}
+                      onClick={() => fetchTemplate(template)}
+                      w="full"
+                      variant={
+                        selectedTemplate.name === template.name
+                          ? "solid"
+                          : "ghost"
+                      }
+                      isDisabled={template.isComingSoon}
+                    >
+                      <HStack overflow="hidden" fontSize="sm" w="full">
+                        <Text>{template.emoji}</Text>
+                        <Text>{template.name}</Text>
+                        {template.isNew && (
+                          <Tag colorScheme="orange" size="sm" flexShrink={0}>
+                            {t("templates.modal.menuHeading.new.tag")}
+                          </Tag>
+                        )}
+                      </HStack>
+                    </Button>
+                  ))}
+              </Stack>
+              <Stack spacing={2}>
+                <Text fontSize="xs" fontWeight="medium" pl="1" color="gray.500">
+                  {t("templates.modal.menuHeading.other")}
+                </Text>
+                {templates
+                  .filter((template) => template.category === undefined)
+                  .map((template) => (
+                    <Button
+                      size="sm"
+                      key={template.name}
+                      onClick={() => fetchTemplate(template)}
+                      w="full"
+                      variant={
+                        selectedTemplate.name === template.name
+                          ? "solid"
+                          : "ghost"
+                      }
+                      isDisabled={template.isComingSoon}
+                    >
+                      <HStack overflow="hidden" fontSize="sm" w="full">
+                        <Text>{template.emoji}</Text>
+                        <Text>{template.name}</Text>
+                        {template.isNew && (
+                          <Tag colorScheme="orange" size="sm" flexShrink={0}>
+                            {t("templates.modal.menuHeading.new.tag")}
+                          </Tag>
+                        )}
+                      </HStack>
+                    </Button>
+                  ))}
+              </Stack>
+            </Stack>
+          </Stack>
+          <Stack
+            w="full"
+            h="full"
+            spacing="4"
+            align="center"
+            pb="4"
+            bgColor={selectedTemplate.backgroundColor ?? "white"}
+          >
+            {typebot && (
+              <Standard
+                key={typebot.id}
+                typebot={typebot}
+                style={{
+                  borderRadius: "0.25rem",
+                  backgroundColor: "#fff",
+                }}
+              />
+            )}
+            <HStack
+              p="6"
+              borderWidth={1}
+              rounded="md"
+              w="95%"
+              spacing={4}
+              bgColor={templateCardBackgroundColor}
+            >
+              <Stack flex="1" spacing={4}>
+                <Heading fontSize="2xl">
+                  {selectedTemplate.emoji}{" "}
+                  <chakra.span ml="2">{selectedTemplate.name}</chakra.span>
+                </Heading>
+                <Text>{selectedTemplate.description}</Text>
+              </Stack>
               <Button
-                colorScheme="blue"
+                colorScheme="orange"
                 onClick={onUseThisTemplateClick}
                 isLoading={isLoading}
               >
-                Use this template
+                {t("templates.modal.useTemplateButton.label")}
               </Button>
-              <Divider />
-              <Stack>
-                {templates.map((template) => (
-                  <Tooltip
-                    key={template.name}
-                    isDisabled={!template.isComingSoon}
-                    label="Coming soon!"
-                  >
-                    <span>
-                      <Button
-                        onClick={() => fetchTemplate(template)}
-                        w="full"
-                        variant={
-                          selectedTemplate.name === template.name
-                            ? 'solid'
-                            : 'ghost'
-                        }
-                        isDisabled={template.isComingSoon}
-                      >
-                        {template.emoji}{' '}
-                        <chakra.span minW="200px" textAlign="left" ml="3">
-                          {template.name}
-                        </chakra.span>
-                      </Button>
-                    </span>
-                  </Tooltip>
-                ))}
-              </Stack>
-            </Stack>
-
-            <Stack>
-              <Divider />
-              <Tooltip label="Coming soon!" placement="top">
-                <span>
-                  <Button
-                    w="full"
-                    variant="ghost"
-                    isDisabled
-                    leftIcon={<ExternalLinkIcon />}
-                  >
-                    Community templates
-                  </Button>
-                </span>
-              </Tooltip>
-            </Stack>
+            </HStack>
           </Stack>
         </ModalBody>
       </ModalContent>
     </Modal>
-  )
-}
+  );
+};

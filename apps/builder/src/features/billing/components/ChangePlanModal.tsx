@@ -1,56 +1,65 @@
-import { AlertInfo } from '@/components/AlertInfo'
+import { AlertInfo } from "@/components/AlertInfo";
+import { useWorkspace } from "@/features/workspace/WorkspaceProvider";
 import {
+  Button,
+  HStack,
   Modal,
   ModalBody,
   ModalContent,
   ModalFooter,
   ModalOverlay,
   Stack,
-  Button,
-  HStack,
-} from '@chakra-ui/react'
-import { ChangePlanForm } from './ChangePlanForm'
+} from "@chakra-ui/react";
+import { useTranslate } from "@tolgee/react";
+import { ChangePlanForm } from "./ChangePlanForm";
 
-export enum LimitReached {
-  BRAND = 'remove branding',
-  CUSTOM_DOMAIN = 'add custom domains',
-  FOLDER = 'create folders',
-  FILE_INPUT = 'use file input blocks',
-  ANALYTICS = 'unlock in-depth analytics',
-}
-
-type ChangePlanModalProps = {
-  type?: LimitReached
-  isOpen: boolean
-  onClose: () => void
-}
+export type ChangePlanModalProps = {
+  type?: string;
+  isOpen: boolean;
+  excludedPlans?: ("STARTER" | "PRO")[];
+  onClose: () => void;
+};
 
 export const ChangePlanModal = ({
   onClose,
   isOpen,
   type,
+  excludedPlans,
 }: ChangePlanModalProps) => {
+  const { t } = useTranslate();
+  const { workspace, currentRole } = useWorkspace();
+
   return (
-    <Modal isOpen={isOpen} onClose={onClose} size="2xl">
+    <Modal
+      isOpen={isOpen}
+      onClose={onClose}
+      size={excludedPlans ? "lg" : "2xl"}
+    >
       <ModalOverlay />
       <ModalContent>
         <ModalBody as={Stack} spacing="6" pt="10">
           {type && (
             <AlertInfo>
-              You need to upgrade your plan in order to {type}
+              {t("billing.upgradeLimitLabel", { type: type })}
             </AlertInfo>
           )}
-          <ChangePlanForm />
+          {workspace && (
+            <ChangePlanForm
+              workspace={workspace}
+              excludedPlans={excludedPlans}
+              currentRole={currentRole}
+            />
+          )}
         </ModalBody>
 
         <ModalFooter>
           <HStack>
             <Button colorScheme="gray" onClick={onClose}>
-              Cancel
+              {t("cancel")}
             </Button>
           </HStack>
         </ModalFooter>
       </ModalContent>
     </Modal>
-  )
-}
+  );
+};

@@ -1,29 +1,33 @@
-import { trpc } from '@/lib/trpc'
+import type { timeFilterValues } from "@/features/analytics/constants";
+import { trpc } from "@/lib/trpc";
 
-export const useResultsQuery = ({
-  typebotId,
-  onError,
-}: {
-  typebotId: string
-  onError?: (error: string) => void
-}) => {
+type Params = {
+  timeFilter: (typeof timeFilterValues)[number];
+  typebotId: string;
+  onError?: (error: string) => void;
+};
+
+const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+
+export const useResultsQuery = ({ timeFilter, typebotId, onError }: Params) => {
   const { data, error, fetchNextPage, hasNextPage, refetch } =
     trpc.results.getResults.useInfiniteQuery(
       {
+        timeZone,
+        timeFilter,
         typebotId,
-        limit: '50',
       },
       {
         getNextPageParam: (lastPage) => lastPage.nextCursor,
-      }
-    )
+      },
+    );
 
-  if (error && onError) onError(error.message)
+  if (error && onError) onError(error.message);
   return {
     data: data?.pages,
     isLoading: !error && !data,
     fetchNextPage,
     hasNextPage,
     refetch,
-  }
-}
+  };
+};

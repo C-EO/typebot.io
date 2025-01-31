@@ -1,0 +1,26 @@
+{
+  "name": "@typebot.io/openai-block",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./schemas": "./src/schemas.ts",
+    "./shared/*": "./src/shared/*.ts"
+  },
+  "dependencies": {
+    "@ai-sdk/openai": "1.1.5",
+    "@typebot.io/ai": "workspace:*",
+    "@ai-sdk/ui-utils": "1.1.8",
+    "ai": "4.1.15",
+    "openai": "4.81.0",
+    "@typebot.io/forge": "workspace:*",
+    "@typebot.io/zod": "workspace:*",
+    "@typebot.io/lib": "workspace:*",
+    "@typebot.io/variables": "workspace:*",
+    "ky": "1.2.4"
+  },
+  "devDependencies": {
+    "@typebot.io/tsconfig": "workspace:*"
+  }
+}

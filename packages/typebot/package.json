@@ -1,0 +1,22 @@
+{
+  "name": "@typebot.io/typebot",
+  "version": "0.0.1",
+  "type": "module",
+  "private": true,
+  "exports": {
+    "./*": "./src/*.ts"
+  },
+  "dependencies": {
+    "@typebot.io/blocks-core": "workspace:*",
+    "@typebot.io/forge": "workspace:*",
+    "@typebot.io/groups": "workspace:*",
+    "@typebot.io/settings": "workspace:*",
+    "@typebot.io/theme": "workspace:*",
+    "@typebot.io/variables": "workspace:*",
+    "@typebot.io/zod": "workspace:*",
+    "@typebot.io/schemas": "workspace:*"
+  },
+  "devDependencies": {
+    "@typebot.io/tsconfig": "workspace:*"
+  }
+}

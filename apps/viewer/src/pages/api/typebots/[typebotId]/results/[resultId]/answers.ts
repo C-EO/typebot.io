@@ -1,42 +1,20 @@
-import prisma from '@/lib/prisma'
-import { Answer } from 'db'
-import { got } from 'got'
-import { NextApiRequest, NextApiResponse } from 'next'
-import { isNotDefined } from 'utils'
-import { methodNotAllowed } from 'utils/api'
+import { methodNotAllowed } from "@typebot.io/lib/api/utils";
+import prisma from "@typebot.io/prisma";
+import type { Prisma } from "@typebot.io/prisma/types";
+import type { NextApiRequest, NextApiResponse } from "next";
 
 const handler = async (req: NextApiRequest, res: NextApiResponse) => {
-  if (req.method === 'PUT') {
+  if (req.method === "PUT") {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { uploadedFiles, ...answer } = (
-      typeof req.body === 'string' ? JSON.parse(req.body) : req.body
-    ) as Answer & { uploadedFiles?: boolean }
-    let storageUsed = 0
-    if (uploadedFiles && answer.content.includes('http')) {
-      const fileUrls = answer.content.split(', ')
-      const hasReachedStorageLimit = fileUrls[0] === null
-      if (!hasReachedStorageLimit) {
-        for (const url of fileUrls) {
-          const { headers } = await got(url)
-          const size = headers['content-length']
-          if (isNotDefined(size)) return
-          storageUsed += parseInt(size, 10)
-        }
-      }
-    }
-    const result = await prisma.answer.upsert({
-      where: {
-        resultId_blockId_groupId: {
-          resultId: answer.resultId,
-          groupId: answer.groupId,
-          blockId: answer.blockId,
-        },
-      },
-      create: { ...answer, storageUsed: storageUsed > 0 ? storageUsed : null },
-      update: { ...answer, storageUsed: storageUsed > 0 ? storageUsed : null },
-    })
-    return res.send(result)
+      typeof req.body === "string" ? JSON.parse(req.body) : req.body
+    ) as Prisma.Answer & { uploadedFiles: string[] };
+    const result = await prisma.answer.createMany({
+      data: [{ ...answer }],
+    });
+    return res.send(result);
   }
-  return methodNotAllowed(res)
-}
+  return methodNotAllowed(res);
+};
 
-export default handler
+export default handler;

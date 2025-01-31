@@ -1,55 +1,22 @@
-import { Log } from 'db'
-import {
-  Edge,
-  Group,
-  PublicTypebot,
-  ResultValues,
-  Typebot,
-  Variable,
-  VariableWithUnknowValue,
-} from 'models'
-import { TypebotViewerProps } from './components/TypebotViewer'
-import { LinkedTypebot } from './providers/TypebotProvider'
+import type { SessionState } from "@typebot.io/chat-session/schemas";
+import type { SetVariableHistoryItem } from "@typebot.io/variables/schemas";
+import type { ContinueChatResponse, CustomEmbedBubble } from "./schemas/api";
 
-export type InputSubmitContent = {
-  label?: string
-  value: string
-  itemId?: string
-}
+export type ExecuteLogicResponse = {
+  outgoingEdgeId: string | undefined;
+  newSessionState?: SessionState;
+  newSetVariableHistory?: SetVariableHistoryItem[];
+} & Pick<ContinueChatResponse, "clientSideActions" | "logs">;
 
-export type EdgeId = string
+export type ExecuteIntegrationResponse = {
+  outgoingEdgeId: string | undefined;
+  newSessionState?: SessionState;
+  startTimeShouldBeUpdated?: boolean;
+  customEmbedBubble?: CustomEmbedBubble;
+  newSetVariableHistory?: SetVariableHistoryItem[];
+} & Pick<ContinueChatResponse, "clientSideActions" | "logs">;
 
-export type LogicState = {
-  isPreview: boolean
-  apiHost: string
-  typebot: TypebotViewerProps['typebot']
-  linkedTypebots: LinkedTypebot[]
-  currentTypebotId: string
-  pushParentTypebotId: (id: string) => void
-  pushEdgeIdInLinkedTypebotQueue: (bot: {
-    edgeId: string
-    typebotId: string
-  }) => void
-  setCurrentTypebotId: (id: string) => void
-  updateVariableValue: (variableId: string, value: unknown) => void
-  updateVariables: (variables: VariableWithUnknowValue[]) => void
-  injectLinkedTypebot: (typebot: Typebot | PublicTypebot) => LinkedTypebot
-  onNewLog: (log: Omit<Log, 'id' | 'createdAt' | 'resultId'>) => void
-  createEdge: (edge: Edge) => void
-}
-
-export type IntegrationState = {
-  apiHost: string
-  typebotId: string
-  groupId: string
-  blockId: string
-  isPreview: boolean
-  variables: Variable[]
-  resultValues: ResultValues
-  groups: Group[]
-  resultId?: string
-  parentTypebotIds: string[]
-  updateVariables: (variables: VariableWithUnknowValue[]) => void
-  updateVariableValue: (variableId: string, value: unknown) => void
-  onNewLog: (log: Omit<Log, 'id' | 'createdAt' | 'resultId'>) => void
-}
+export type ParsedReply =
+  | { status: "success"; reply: string }
+  | { status: "fail" }
+  | { status: "skip" };

@@ -1,0 +1,21 @@
+{
+  "name": "@typebot.io/mistral-block",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./schemas": "./src/schemas.ts"
+  },
+  "devDependencies": {
+    "@typebot.io/forge": "workspace:*",
+    "@typebot.io/lib": "workspace:*",
+    "@typebot.io/tsconfig": "workspace:*",
+    "@typebot.io/zod": "workspace:*"
+  },
+  "dependencies": {
+    "@ai-sdk/mistral": "1.1.6",
+    "@typebot.io/ai": "workspace:*",
+    "ky": "1.2.4"
+  }
+}

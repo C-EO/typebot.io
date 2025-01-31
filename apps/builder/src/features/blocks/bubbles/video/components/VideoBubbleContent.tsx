@@ -1,52 +1,90 @@
-import { Box, Text } from '@chakra-ui/react'
-import { VideoBubbleBlock, VideoBubbleContentType } from 'models'
+import { useTypebot } from "@/features/editor/providers/TypebotProvider";
+import { VariableTag } from "@/features/graph/components/nodes/block/VariableTag";
+import { Box, Text } from "@chakra-ui/react";
+import { useTranslate } from "@tolgee/react";
+import {
+  VideoBubbleContentType,
+  embedBaseUrls,
+} from "@typebot.io/blocks-bubbles/video/constants";
+import type { VideoBubbleBlock } from "@typebot.io/blocks-bubbles/video/schema";
+import { findUniqueVariable } from "@typebot.io/variables/findUniqueVariableValue";
 
-export const VideoBubbleContent = ({ block }: { block: VideoBubbleBlock }) => {
+type Props = {
+  block: VideoBubbleBlock;
+};
+
+export const VideoBubbleContent = ({ block }: Props) => {
+  const { typebot } = useTypebot();
+  const { t } = useTranslate();
   if (!block.content?.url || !block.content.type)
-    return <Text color="gray.500">Click to edit...</Text>
+    return <Text color="gray.500">{t("clickToEdit")}</Text>;
+  const variable = typebot
+    ? findUniqueVariable(typebot?.variables)(block.content?.url)
+    : null;
   switch (block.content.type) {
     case VideoBubbleContentType.URL:
       return (
-        <Box w="full" h="120px" pos="relative">
-          <video
-            key={block.content.url}
-            controls
-            style={{
-              width: '100%',
-              height: '100%',
-              position: 'absolute',
-              left: '0',
-              top: '0',
-              borderRadius: '10px',
-            }}
-          >
-            <source src={block.content.url} />
-          </video>
+        <Box w="full" h={variable ? undefined : " 120px"} pos="relative">
+          {variable ? (
+            <Text>
+              Display <VariableTag variableName={variable.name} />
+            </Text>
+          ) : (
+            <video
+              key={block.content.url}
+              controls={block.content?.areControlsDisplayed}
+              style={{
+                width: "100%",
+                height: "100%",
+                position: "absolute",
+                left: "0",
+                top: "0",
+                borderRadius: "10px",
+              }}
+            >
+              <source src={block.content.url} />
+            </video>
+          )}
         </Box>
-      )
+      );
+    case VideoBubbleContentType.GUMLET:
     case VideoBubbleContentType.VIMEO:
     case VideoBubbleContentType.YOUTUBE: {
-      const baseUrl =
-        block.content.type === VideoBubbleContentType.VIMEO
-          ? 'https://player.vimeo.com/video'
-          : 'https://www.youtube.com/embed'
+      const baseUrl = embedBaseUrls[block.content.type];
       return (
         <Box w="full" h="120px" pos="relative">
           <iframe
             src={`${baseUrl}/${block.content.id}`}
-            allowFullScreen
             style={{
-              width: '100%',
-              height: '100%',
-              position: 'absolute',
-              left: '0',
-              top: '0',
-              borderRadius: '10px',
-              pointerEvents: 'none',
+              width: "100%",
+              height: "100%",
+              position: "absolute",
+              left: "0",
+              top: "0",
+              borderRadius: "10px",
+              pointerEvents: "none",
             }}
           />
         </Box>
-      )
+      );
+    }
+    case VideoBubbleContentType.TIKTOK: {
+      return (
+        <Box w="full" h="300px" pos="relative">
+          <iframe
+            src={`https://www.tiktok.com/embed/v2/${block.content.id}`}
+            style={{
+              width: "100%",
+              height: "100%",
+              position: "absolute",
+              left: "0",
+              top: "0",
+              borderRadius: "10px",
+              pointerEvents: "none",
+            }}
+          />
+        </Box>
+      );
     }
   }
-}
+};

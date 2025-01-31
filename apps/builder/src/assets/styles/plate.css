@@ -1,5 +1,20 @@
+.slate-inline-code {
+  background-color: #a1a1aa;
+  color: white;
+  padding: 0.125rem 0.25rem;
+  border-radius: 0.35rem;
+  font-size: small;
+}
+
+.slate-variable {
+  background-color: var(--chakra-colors-purple-500);
+  color: #ffffff;
+  padding: 0.125rem 0.25rem;
+  border-radius: 0.35rem;
+}
+
 .slate-bold {
-  font-weight: bold;
+  font-weight: 500;
 }
 
 .slate-italic {

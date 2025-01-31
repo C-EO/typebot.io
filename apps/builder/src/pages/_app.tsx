@@ -1,76 +1,82 @@
-import { useEffect } from 'react'
-import { AppProps } from 'next/app'
-import { SessionProvider } from 'next-auth/react'
-import { ChakraProvider, createStandaloneToast } from '@chakra-ui/react'
-import { customTheme } from '@/lib/theme'
-import { useRouterProgressBar } from '@/lib/routerProgressBar'
-import '@/assets/styles/routerProgressBar.css'
-import '@/assets/styles/plate.css'
-import '@/assets/styles/submissionsTable.css'
-import '@/assets/styles/codeMirror.css'
-import '@/assets/styles/custom.css'
-import { UserProvider } from '@/features/account'
-import { TypebotProvider } from '@/features/editor'
-import { useRouter } from 'next/router'
-import { SupportBubble } from '@/components/SupportBubble'
-import { WorkspaceProvider } from '@/features/workspace'
-import { toTitleCase } from 'utils'
-import { Session } from 'next-auth'
-import { Plan } from 'db'
-import { trpc } from '@/lib/trpc'
+import { NewVersionPopup } from "@/components/NewVersionPopup";
+import { SupportBubble } from "@/components/SupportBubble";
+import { Toaster } from "@/components/Toaster";
+import { UserProvider } from "@/features/account/UserProvider";
+import { TypebotProvider } from "@/features/editor/providers/TypebotProvider";
+import { WorkspaceProvider } from "@/features/workspace/WorkspaceProvider";
+import { isCloudProdInstance } from "@/helpers/isCloudProdInstance";
+import { useRouterProgressBar } from "@/lib/routerProgressBar";
+import { tolgee } from "@/lib/tolgee";
+import { trpc } from "@/lib/trpc";
+import { ChakraProvider, createStandaloneToast } from "@chakra-ui/react";
+import { TolgeeProvider, useTolgeeSSR } from "@tolgee/react";
+import { toTitleCase } from "@typebot.io/lib/utils";
+import { Plan } from "@typebot.io/prisma/enum";
+import { customTheme } from "@typebot.io/ui/chakraTheme";
+import { SessionProvider } from "next-auth/react";
+import type { AppProps } from "next/app";
+import { useRouter } from "next/router";
+import { useEffect } from "react";
+import "@/assets/styles/routerProgressBar.css";
+import "@/assets/styles/plate.css";
+import "@/assets/styles/resultsTable.css";
+import "@/assets/styles/custom.css";
 
-const { ToastContainer, toast } = createStandaloneToast(customTheme)
+const { ToastContainer, toast } = createStandaloneToast(customTheme);
 
-const App = ({
-  Component,
-  pageProps: { session, ...pageProps },
-}: AppProps<{ session: Session }>) => {
-  useRouterProgressBar()
-  const { query, pathname, isReady } = useRouter()
+const App = ({ Component, pageProps }: AppProps) => {
+  const router = useRouter();
+  const ssrTolgee = useTolgeeSSR(tolgee, router.locale);
 
-  useEffect(() => {
-    pathname.endsWith('/edit')
-      ? (document.body.style.overflow = 'hidden')
-      : (document.body.style.overflow = 'auto')
-  }, [pathname])
+  useRouterProgressBar();
 
   useEffect(() => {
-    const newPlan = query.stripe?.toString()
+    if (
+      router.pathname.endsWith("/edit") ||
+      router.pathname.endsWith("/analytics")
+    ) {
+      document.body.style.overflow = "hidden";
+      document.body.classList.add("disable-scroll-x-behavior");
+    } else {
+      document.body.style.overflow = "auto";
+      document.body.classList.remove("disable-scroll-x-behavior");
+    }
+  }, [router.pathname]);
+
+  useEffect(() => {
+    const newPlan = router.query.stripe?.toString();
     if (newPlan === Plan.STARTER || newPlan === Plan.PRO)
       toast({
-        position: 'bottom-right',
-        status: 'success',
-        title: 'Upgrade success!',
+        position: "top-right",
+        status: "success",
+        title: "Upgrade success!",
         description: `Workspace upgraded to ${toTitleCase(newPlan)} 🎉`,
-      })
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isReady])
+      });
+  }, [router.query.stripe]);
 
-  const typebotId = query.typebotId?.toString()
+  const typebotId = router.query.typebotId?.toString();
+
   return (
-    <>
+    <TolgeeProvider tolgee={ssrTolgee}>
       <ToastContainer />
       <ChakraProvider theme={customTheme}>
-        <SessionProvider session={session}>
+        <Toaster />
+        <SessionProvider session={pageProps.session}>
           <UserProvider>
-            {typebotId ? (
-              <TypebotProvider typebotId={typebotId}>
-                <WorkspaceProvider typebotId={typebotId}>
-                  <Component />
-                  <SupportBubble />
-                </WorkspaceProvider>
-              </TypebotProvider>
-            ) : (
-              <WorkspaceProvider>
+            <TypebotProvider typebotId={typebotId}>
+              <WorkspaceProvider typebotId={typebotId}>
                 <Component {...pageProps} />
-                <SupportBubble />
+                {!router.pathname.endsWith("edit") && isCloudProdInstance() && (
+                  <SupportBubble />
+                )}
+                <NewVersionPopup />
               </WorkspaceProvider>
-            )}
+            </TypebotProvider>
           </UserProvider>
         </SessionProvider>
       </ChakraProvider>
-    </>
-  )
-}
+    </TolgeeProvider>
+  );
+};
 
-export default trpc.withTRPC(App)
+export default trpc.withTRPC(App);

@@ -1,35 +1,32 @@
-import React, { ComponentProps } from 'react'
 import {
   Mjml,
   MjmlBody,
-  MjmlSection,
   MjmlColumn,
+  MjmlSection,
   MjmlSpacer,
-} from '@faire/mjml-react'
-import { render } from '@faire/mjml-react/utils/render'
-import { Button, Head, HeroImage, Text } from '../components'
-import { parseNumberWithCommas } from 'utils'
-import { SendMailOptions } from 'nodemailer'
-import { sendEmail } from '../sendEmail'
+} from "@faire/mjml-react";
+import { render } from "@faire/mjml-react/utils/render";
+import { env } from "@typebot.io/env";
+import { parseNumberWithCommas } from "@typebot.io/lib/utils";
+import type { SendMailOptions } from "nodemailer";
+import type { ComponentProps } from "react";
+import * as React from "react";
+import { Button } from "../components/Button";
+import { Head } from "../components/Head";
+import { HeroImage } from "../components/HeroImage";
+import { Text } from "../components/Text";
+import { sendEmail } from "../sendEmail";
 
 type ReachedChatsLimitEmailProps = {
-  chatsLimit: number
-  url: string
-}
-
-const now = new Date()
-const firstDayOfNextMonth = new Date(now.getFullYear(), now.getMonth() + 1, 1)
-const readableResetDate = firstDayOfNextMonth
-  .toDateString()
-  .split(' ')
-  .slice(1, 4)
-  .join(' ')
+  chatsLimit: number;
+  url: string;
+};
 
 export const ReachedChatsLimitEmail = ({
   chatsLimit,
   url,
 }: ReachedChatsLimitEmailProps) => {
-  const readableChatsLimit = parseNumberWithCommas(chatsLimit)
+  const readableChatsLimit = parseNumberWithCommas(chatsLimit);
 
   return (
     <Mjml>
@@ -37,21 +34,20 @@ export const ReachedChatsLimitEmail = ({
       <MjmlBody width={600}>
         <MjmlSection padding="0">
           <MjmlColumn>
-            <HeroImage src="https://typebot.s3.fr-par.scw.cloud/public/assets/actionRequiredEmailBanner.png" />
+            <HeroImage
+              src={`${env.NEXTAUTH_URL}/images/actionRequiredBanner.png`}
+            />
           </MjmlColumn>
         </MjmlSection>
         <MjmlSection padding="0 24px" cssClass="smooth">
           <MjmlColumn>
             <Text>
-              It just happened, you&apos;ve reached your monthly{' '}
+              It just happened, you&apos;ve reached your monthly{" "}
               {readableChatsLimit} chats limit 😮
             </Text>
-            <Text fontWeight="800">
-              It means your bots are closed until {readableResetDate}❗
-            </Text>
             <Text>
-              If you&apos;d like to continue chatting with your users this
-              month, then you need to upgrade your plan. 🚀
+              If you&apos;d like your bots to continue chatting with your users
+              this month, then you need to upgrade your plan. 🚀
             </Text>
 
             <MjmlSpacer height="24px" />
@@ -60,16 +56,16 @@ export const ReachedChatsLimitEmail = ({
         </MjmlSection>
       </MjmlBody>
     </Mjml>
-  )
-}
+  );
+};
 
 export const sendReachedChatsLimitEmail = ({
   to,
   ...props
-}: Pick<SendMailOptions, 'to'> &
+}: Pick<SendMailOptions, "to"> &
   ComponentProps<typeof ReachedChatsLimitEmail>) =>
   sendEmail({
     to,
-    subject: "You've reached your chats limit",
+    subject: "[Action Required] Chats limit reached",
     html: render(<ReachedChatsLimitEmail {...props} />).html,
-  })
+  });

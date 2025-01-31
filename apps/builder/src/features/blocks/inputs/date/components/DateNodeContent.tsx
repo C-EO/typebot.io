@@ -1,6 +1,14 @@
-import React from 'react'
-import { Text } from '@chakra-ui/react'
+import { WithVariableContent } from "@/features/graph/components/nodes/block/WithVariableContent";
+import { Text } from "@chakra-ui/react";
+import React from "react";
 
-export const DateNodeContent = () => (
-  <Text color={'gray.500'}>Pick a date...</Text>
-)
+type Props = {
+  variableId?: string;
+};
+export const DateNodeContent = ({ variableId }: Props) => {
+  return variableId ? (
+    <WithVariableContent variableId={variableId} />
+  ) : (
+    <Text color={"gray.500"}>Pick a date</Text>
+  );
+};

@@ -1,31 +1,33 @@
-import {
-  Alert,
-  AlertIcon,
-  Button,
-  Input,
-  Link,
-  Stack,
-  Text,
-} from '@chakra-ui/react'
-import { ExternalLinkIcon } from '@/components/icons'
-import { useTypebot } from '@/features/editor'
-import { MakeComBlock } from 'models'
-import React from 'react'
-import { byId } from 'utils'
+import { ExternalLinkIcon } from "@/components/icons";
+import { Alert, AlertIcon, Button, Link, Stack, Text } from "@chakra-ui/react";
+import type { HttpRequest } from "@typebot.io/blocks-integrations/httpRequest/schema";
+import type { MakeComBlock } from "@typebot.io/blocks-integrations/makeCom/schema";
+import React from "react";
+import { HttpRequestAdvancedConfigForm } from "../../httpRequest/components/HttpRequestAdvancedConfigForm";
 
 type Props = {
-  block: MakeComBlock
-}
+  block: MakeComBlock;
+  onOptionsChange: (options: MakeComBlock["options"]) => void;
+};
 
-export const MakeComSettings = ({ block }: Props) => {
-  const { webhooks } = useTypebot()
-  const webhook = webhooks.find(byId(block.webhookId))
+export const MakeComSettings = ({
+  block: { id: blockId, options },
+  onOptionsChange,
+}: Props) => {
+  const setLocalWebhook = async (newLocalWebhook: HttpRequest) => {
+    onOptionsChange({
+      ...options,
+      webhook: newLocalWebhook,
+    });
+  };
+
+  const url = options?.webhook?.url;
 
   return (
     <Stack spacing={4}>
-      <Alert status={webhook?.url ? 'success' : 'info'} rounded="md">
+      <Alert status={url ? "success" : "info"} rounded="md">
         <AlertIcon />
-        {webhook?.url ? (
+        {url ? (
           <>Your scenario is correctly configured 🚀</>
         ) : (
           <Stack>
@@ -34,14 +36,20 @@ export const MakeComSettings = ({ block }: Props) => {
               as={Link}
               href="https://www.make.com/en/integrations/typebot"
               isExternal
-              colorScheme="blue"
+              colorScheme="orange"
             >
               <Text mr="2">Make.com</Text> <ExternalLinkIcon />
             </Button>
           </Stack>
         )}
       </Alert>
-      {webhook?.url && <Input value={webhook?.url} isDisabled />}
+      <HttpRequestAdvancedConfigForm
+        blockId={blockId}
+        httpRequest={options?.webhook}
+        options={options}
+        onHttpRequestChange={setLocalWebhook}
+        onOptionsChange={onOptionsChange}
+      />
     </Stack>
-  )
-}
+  );
+};

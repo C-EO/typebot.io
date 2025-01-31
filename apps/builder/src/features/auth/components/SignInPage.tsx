@@ -1,38 +1,60 @@
-import { Seo } from '@/components/Seo'
-import { TextLink } from '@/components/TextLink'
-import { VStack, Heading, Text } from '@chakra-ui/react'
-import { useRouter } from 'next/router'
-import { SignInForm } from './SignInForm'
+import { Seo } from "@/components/Seo";
+import { TextLink } from "@/components/TextLink";
+import { Heading, Text, VStack } from "@chakra-ui/react";
+import { T, useTranslate } from "@tolgee/react";
+import { useRouter } from "next/router";
+import { SignInForm } from "./SignInForm";
 
 type Props = {
-  type: 'signin' | 'signup'
-  defaultEmail?: string
-}
+  type: "signin" | "signup";
+  defaultEmail?: string;
+};
 
 export const SignInPage = ({ type }: Props) => {
-  const { query } = useRouter()
+  const { t } = useTranslate();
+  const { query } = useRouter();
 
   return (
     <VStack spacing={4} h="100vh" justifyContent="center">
-      <Seo title={type === 'signin' ? 'Sign In' : 'Register'} />
-      <Heading
-        onClick={() => {
-          throw new Error('Sentry is working')
-        }}
-      >
-        {type === 'signin' ? 'Sign In' : 'Create an account'}
+      <Seo
+        title={
+          type === "signin"
+            ? t("auth.signin.heading")
+            : t("auth.register.heading")
+        }
+      />
+      <Heading>
+        {type === "signin"
+          ? t("auth.signin.heading")
+          : t("auth.register.heading")}
       </Heading>
-      {type === 'signin' ? (
+      {type === "signin" ? (
         <Text>
-          Don&apos;t have an account?{' '}
-          <TextLink href="/register">Sign up for free</TextLink>
+          {t("auth.signin.noAccountLabel.preLink")}{" "}
+          <TextLink href="/register">
+            {t("auth.signin.noAccountLabel.link")}
+          </TextLink>
         </Text>
       ) : (
         <Text>
-          Already have an account? <TextLink href="/signin">Sign in</TextLink>
+          {t("auth.register.alreadyHaveAccountLabel.preLink")}{" "}
+          <TextLink href="/signin">
+            {t("auth.register.alreadyHaveAccountLabel.link")}
+          </TextLink>
         </Text>
       )}
       <SignInForm defaultEmail={query.g?.toString()} />
+      {type === "signup" ? (
+        <Text fontSize="sm" maxW="400px" textAlign="center">
+          <T
+            keyName="auth.register.aggreeToTerms"
+            params={{
+              terms: <TextLink href={"https://typebot.io/terms-of-service"} />,
+              privacy: <TextLink href={"https://typebot.io/privacy-policy"} />,
+            }}
+          />
+        </Text>
+      ) : null}
     </VStack>
-  )
-}
+  );
+};

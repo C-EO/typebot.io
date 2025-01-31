@@ -1,140 +1,257 @@
-import {
-  Button,
-  HStack,
-  IconButton,
-  Stack,
-  Tooltip,
-  Text,
-  Menu,
-  MenuButton,
-  MenuList,
-  MenuItem,
-  useDisclosure,
-  ButtonProps,
-} from '@chakra-ui/react'
+import { ConfirmModal } from "@/components/ConfirmModal";
+import { TextLink } from "@/components/TextLink";
 import {
   ChevronLeftIcon,
   CloudOffIcon,
   LockedIcon,
   UnlockedIcon,
-} from '@/components/icons'
-import { useTypebot } from '@/features/editor'
-import { useWorkspace } from '@/features/workspace'
-import { InputBlockType } from 'models'
-import { useRouter } from 'next/router'
-import { isNotDefined } from 'utils'
-import { ChangePlanModal, isFreePlan, LimitReached } from '@/features/billing'
-import { timeSince } from '@/utils/helpers'
+} from "@/components/icons";
+import { ChangePlanModal } from "@/features/billing/components/ChangePlanModal";
+import { isFreePlan } from "@/features/billing/helpers/isFreePlan";
+import { useTypebot } from "@/features/editor/providers/TypebotProvider";
+import { useWorkspace } from "@/features/workspace/WorkspaceProvider";
+import { useTimeSince } from "@/hooks/useTimeSince";
+import { useToast } from "@/hooks/useToast";
+import { trpc } from "@/lib/trpc";
+import {
+  Button,
+  type ButtonProps,
+  HStack,
+  IconButton,
+  Menu,
+  MenuButton,
+  MenuItem,
+  MenuList,
+  Stack,
+  Text,
+  Tooltip,
+  useDisclosure,
+} from "@chakra-ui/react";
+import { T, useTranslate } from "@tolgee/react";
+import { InputBlockType } from "@typebot.io/blocks-inputs/constants";
+import { isNotDefined } from "@typebot.io/lib/utils";
+import { useRouter } from "next/router";
+import { parseDefaultPublicId } from "../helpers/parseDefaultPublicId";
 
-export const PublishButton = (props: ButtonProps) => {
-  const { workspace } = useWorkspace()
-  const { push, query } = useRouter()
-  const { isOpen, onOpen, onClose } = useDisclosure()
+type Props = ButtonProps & {
+  isMoreMenuDisabled?: boolean;
+};
+export const PublishButton = ({
+  isMoreMenuDisabled = false,
+  ...props
+}: Props) => {
+  const { t } = useTranslate();
+  const { workspace } = useWorkspace();
+  const { push, query, pathname } = useRouter();
+  const { isOpen, onOpen, onClose } = useDisclosure();
   const {
-    isPublishing,
+    isOpen: isNewEngineWarningOpen,
+    onOpen: onNewEngineWarningOpen,
+    onClose: onNewEngineWarningClose,
+  } = useDisclosure();
+  const {
     isPublished,
-    publishTypebot,
     publishedTypebot,
     restorePublishedTypebot,
     typebot,
     isSavingLoading,
     updateTypebot,
-    unpublishTypebot,
     save,
-  } = useTypebot()
+    publishedTypebotVersion,
+  } = useTypebot();
+  const timeSinceLastPublish = useTimeSince(
+    publishedTypebot?.updatedAt.toString(),
+  );
+  const { showToast } = useToast();
+
+  const {
+    typebot: {
+      getPublishedTypebot: { refetch: refetchPublishedTypebot },
+    },
+  } = trpc.useContext();
+
+  const { mutate: publishTypebotMutate, isLoading: isPublishing } =
+    trpc.typebot.publishTypebot.useMutation({
+      onError: (error) => {
+        showToast({
+          title: t("publish.error.label"),
+          description: error.message,
+        });
+        if (error.data?.httpStatus === 403) {
+          setTimeout(() => {
+            window.location.reload();
+          }, 3000);
+        }
+      },
+      onSuccess: () => {
+        refetchPublishedTypebot({
+          typebotId: typebot?.id as string,
+        });
+        if (!publishedTypebot && !pathname.endsWith("share"))
+          push(`/typebots/${query.typebotId}/share`);
+      },
+    });
+
+  const { mutate: unpublishTypebotMutate, isLoading: isUnpublishing } =
+    trpc.typebot.unpublishTypebot.useMutation({
+      onError: (error) =>
+        showToast({
+          title: t("editor.header.unpublishTypebot.error.label"),
+          description: error.message,
+        }),
+      onSuccess: () => {
+        refetchPublishedTypebot();
+      },
+    });
 
   const hasInputFile = typebot?.groups
     .flatMap((g) => g.blocks)
-    .some((b) => b.type === InputBlockType.FILE)
+    .some((b) => b.type === InputBlockType.FILE);
 
-  const handlePublishClick = () => {
-    if (isFreePlan(workspace) && hasInputFile) return onOpen()
-    publishTypebot()
-    if (!publishedTypebot) push(`/typebots/${query.typebotId}/share`)
-  }
+  const handlePublishClick = async () => {
+    if (!typebot?.id) return;
+    if (isFreePlan(workspace) && hasInputFile) return onOpen();
+    await save(
+      !typebot.publicId
+        ? { publicId: parseDefaultPublicId(typebot.name, typebot.id) }
+        : undefined,
+      true,
+    );
+    publishTypebotMutate({
+      typebotId: typebot.id,
+    });
+  };
+
+  const unpublishTypebot = async () => {
+    if (!typebot?.id) return;
+    if (typebot.isClosed)
+      await updateTypebot({ updates: { isClosed: false }, save: true });
+    unpublishTypebotMutate({
+      typebotId: typebot?.id,
+    });
+  };
 
   const closeTypebot = async () => {
-    updateTypebot({ isClosed: true })
-    await save()
-  }
+    await updateTypebot({ updates: { isClosed: true }, save: true });
+  };
 
   const openTypebot = async () => {
-    updateTypebot({ isClosed: false })
-    await save()
-  }
+    await updateTypebot({ updates: { isClosed: false }, save: true });
+  };
 
   return (
     <HStack spacing="1px">
       <ChangePlanModal
         isOpen={isOpen}
         onClose={onClose}
-        type={LimitReached.FILE_INPUT}
+        type={t("billing.limitMessage.fileInput")}
       />
+      {publishedTypebot && publishedTypebotVersion !== typebot?.version && (
+        <ConfirmModal
+          isOpen={isNewEngineWarningOpen}
+          onConfirm={handlePublishClick}
+          onClose={onNewEngineWarningClose}
+          confirmButtonColor="blue"
+          title={t("publish.versionWarning.title.label")}
+          message={
+            <Stack spacing="3">
+              <Text>
+                {t("publish.versionWarning.message.aboutToDeploy.label")}
+              </Text>
+              <Text fontWeight="bold">
+                <T
+                  keyName="publish.versionWarning.checkBreakingChanges"
+                  params={{
+                    link: (
+                      <TextLink
+                        href="https://docs.typebot.io/breaking-changes#typebot-v6"
+                        isExternal
+                      />
+                    ),
+                  }}
+                />
+              </Text>
+              <Text>
+                {t("publish.versionWarning.message.testInPreviewMode.label")}
+              </Text>
+            </Stack>
+          }
+          confirmButtonLabel={t("publishButton.label")}
+        />
+      )}
       <Tooltip
-        borderRadius="md"
-        hasArrow
         placement="bottom-end"
         label={
           <Stack>
-            <Text>There are non published changes.</Text>
-            <Text fontStyle="italic">
-              Published version from{' '}
-              {publishedTypebot &&
-                timeSince(publishedTypebot.updatedAt.toString())}{' '}
-              ago
-            </Text>
+            <Text>{t("publishButton.tooltip.nonPublishedChanges.label")}</Text>
+            {timeSinceLastPublish ? (
+              <Text fontStyle="italic">
+                <T
+                  keyName="publishButton.tooltip.publishedVersion.from.label"
+                  params={{
+                    timeSince: timeSinceLastPublish,
+                  }}
+                />
+              </Text>
+            ) : null}
           </Stack>
         }
         isDisabled={isNotDefined(publishedTypebot) || isPublished}
       >
         <Button
-          colorScheme="blue"
-          isLoading={isPublishing || isSavingLoading}
-          isDisabled={isPublished}
-          onClick={handlePublishClick}
-          borderRightRadius={publishedTypebot ? 0 : undefined}
+          colorScheme="orange"
+          isLoading={isPublishing || isUnpublishing}
+          isDisabled={isPublished || isSavingLoading}
+          onClick={() => {
+            publishedTypebot && publishedTypebotVersion !== typebot?.version
+              ? onNewEngineWarningOpen()
+              : handlePublishClick();
+          }}
+          borderRightRadius={
+            publishedTypebot && !isMoreMenuDisabled ? 0 : undefined
+          }
           {...props}
         >
           {isPublished
             ? typebot?.isClosed
-              ? 'Closed'
-              : 'Published'
-            : 'Publish'}
+              ? t("publishButton.closed.label")
+              : t("publishButton.published.label")
+            : t("publishButton.label")}
         </Button>
       </Tooltip>
 
-      {publishedTypebot && (
-        <Menu>
+      {!isMoreMenuDisabled && publishedTypebot && (
+        <Menu isLazy>
           <MenuButton
             as={IconButton}
-            colorScheme={'blue'}
+            colorScheme="orange"
             borderLeftRadius={0}
             icon={<ChevronLeftIcon transform="rotate(-90deg)" />}
-            aria-label="Show published typebot menu"
+            aria-label={t("publishButton.dropdown.showMenu.label")}
             size="sm"
             isDisabled={isPublishing || isSavingLoading}
           />
           <MenuList>
             {!isPublished && (
               <MenuItem onClick={restorePublishedTypebot}>
-                Restore published version
+                {t("publishButton.dropdown.restoreVersion.label")}
               </MenuItem>
             )}
             {!typebot?.isClosed ? (
               <MenuItem onClick={closeTypebot} icon={<LockedIcon />}>
-                Close typebot to new responses
+                {t("publishButton.dropdown.close.label")}
               </MenuItem>
             ) : (
               <MenuItem onClick={openTypebot} icon={<UnlockedIcon />}>
-                Reopen typebot to new responses
+                {t("publishButton.dropdown.reopen.label")}
               </MenuItem>
             )}
             <MenuItem onClick={unpublishTypebot} icon={<CloudOffIcon />}>
-              Unpublish typebot
+              {t("publishButton.dropdown.unpublish.label")}
             </MenuItem>
           </MenuList>
         </Menu>
       )}
     </HStack>
-  )
-}
+  );
+};

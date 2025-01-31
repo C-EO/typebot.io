@@ -1,39 +1,39 @@
-import prisma from '@/lib/prisma'
-import { Credentials } from 'models'
-import { NextApiRequest, NextApiResponse } from 'next'
-import { getAuthenticatedUser } from '@/features/auth/api'
+import { getAuthenticatedUser } from "@/features/auth/helpers/getAuthenticatedUser";
+import { encrypt } from "@typebot.io/credentials/encrypt";
+import type { Credentials } from "@typebot.io/credentials/schemas";
 import {
   badRequest,
   forbidden,
   methodNotAllowed,
   notAuthenticated,
-  encrypt,
-} from 'utils/api'
+} from "@typebot.io/lib/api/utils";
+import prisma from "@typebot.io/prisma";
+import type { NextApiRequest, NextApiResponse } from "next";
 
 const handler = async (req: NextApiRequest, res: NextApiResponse) => {
-  const user = await getAuthenticatedUser(req)
-  if (!user) return notAuthenticated(res)
-  const workspaceId = req.query.workspaceId as string | undefined
-  if (!workspaceId) return badRequest(res)
-  if (req.method === 'GET') {
+  const user = await getAuthenticatedUser(req, res);
+  if (!user) return notAuthenticated(res);
+  const workspaceId = req.query.workspaceId as string | undefined;
+  if (!workspaceId) return badRequest(res);
+  if (req.method === "GET") {
     const credentials = await prisma.credentials.findMany({
       where: {
         workspace: { id: workspaceId, members: { some: { userId: user.id } } },
       },
       select: { name: true, type: true, workspaceId: true, id: true },
-    })
-    return res.send({ credentials })
+    });
+    return res.send({ credentials });
   }
-  if (req.method === 'POST') {
+  if (req.method === "POST") {
     const data = (
-      typeof req.body === 'string' ? JSON.parse(req.body) : req.body
-    ) as Credentials
-    const { encryptedData, iv } = encrypt(data.data)
+      typeof req.body === "string" ? JSON.parse(req.body) : req.body
+    ) as Credentials;
+    const { encryptedData, iv } = await encrypt(data.data);
     const workspace = await prisma.workspace.findFirst({
       where: { id: workspaceId, members: { some: { userId: user.id } } },
       select: { id: true },
-    })
-    if (!workspace) return forbidden(res)
+    });
+    if (!workspace) return forbidden(res);
     const credentials = await prisma.credentials.create({
       data: {
         ...data,
@@ -41,10 +41,10 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
         iv,
         workspaceId,
       },
-    })
-    return res.send({ credentials })
+    });
+    return res.send({ credentials });
   }
-  return methodNotAllowed(res)
-}
+  return methodNotAllowed(res);
+};
 
-export default handler
+export default handler;

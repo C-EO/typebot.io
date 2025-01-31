@@ -1,7 +1,0 @@
-export * from './AlmostReachedChatsLimitEmail'
-export * from './AlmostReachedStorageLimitEmail'
-export * from './DefaultBotNotificationEmail'
-export * from './GuestInvitationEmail'
-export * from './ReachedChatsLimitEmail'
-export * from './ReachedStorageLimitEmail'
-export * from './WorkspaceMemberInvitationEmail'

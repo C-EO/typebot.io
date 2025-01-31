@@ -1,44 +1,67 @@
+import { BracesIcon } from "@/components/icons";
+import { VariableSearchInput } from "@/components/inputs/VariableSearchInput";
+import { useParentModal } from "@/features/graph/providers/ParentModalProvider";
+import { useOutsideClick } from "@/hooks/useOutsideClick";
 import {
-  Popover,
-  PopoverTrigger,
   Flex,
-  Tooltip,
   IconButton,
+  type IconButtonProps,
+  Popover,
+  PopoverAnchor,
   PopoverContent,
-  IconButtonProps,
-} from '@chakra-ui/react'
-import { UserIcon } from '@/components/icons'
-import { Variable } from 'models'
-import React from 'react'
-import { VariableSearchInput } from '@/components/VariableSearchInput'
+  Portal,
+  Tooltip,
+  useDisclosure,
+} from "@chakra-ui/react";
+import { useTranslate } from "@tolgee/react";
+import type { Variable } from "@typebot.io/variables/schemas";
+import React, { useRef } from "react";
 
 type Props = {
-  onSelectVariable: (variable: Pick<Variable, 'name' | 'id'>) => void
-} & Omit<IconButtonProps, 'aria-label'>
+  onSelectVariable: (variable: Pick<Variable, "name" | "id">) => void;
+} & Omit<IconButtonProps, "aria-label">;
 
 export const VariablesButton = ({ onSelectVariable, ...props }: Props) => {
+  const { t } = useTranslate();
+  const { isOpen, onOpen, onClose } = useDisclosure();
+  const popoverRef = useRef<HTMLDivElement>(null);
+  const { ref: parentModalRef } = useParentModal();
+
+  useOutsideClick({
+    ref: popoverRef,
+    handler: onClose,
+    isEnabled: isOpen,
+  });
+
   return (
-    <Popover isLazy placement="bottom-end" gutter={0}>
-      <PopoverTrigger>
+    <Popover isLazy isOpen={isOpen}>
+      <PopoverAnchor>
         <Flex>
-          <Tooltip label="Insert a variable">
+          <Tooltip label={t("variables.button.tooltip")}>
             <IconButton
-              aria-label={'Insert a variable'}
-              icon={<UserIcon />}
+              aria-label={t("variables.button.tooltip")}
+              icon={<BracesIcon />}
               pos="relative"
+              onClick={onOpen}
               {...props}
             />
           </Tooltip>
         </Flex>
-      </PopoverTrigger>
-      <PopoverContent w="full">
-        <VariableSearchInput
-          onSelectVariable={onSelectVariable}
-          placeholder="Search for a variable"
-          shadow="lg"
-          autoFocus
-        />
-      </PopoverContent>
+      </PopoverAnchor>
+      <Portal containerRef={parentModalRef}>
+        <PopoverContent w="full" ref={popoverRef}>
+          <VariableSearchInput
+            initialVariableId={undefined}
+            onSelectVariable={(variable) => {
+              onClose();
+              if (variable) onSelectVariable(variable);
+            }}
+            placeholder={t("variables.button.searchInput.placeholder")}
+            shadow="md"
+            autoFocus
+          />
+        </PopoverContent>
+      </Portal>
     </Popover>
-  )
-}
+  );
+};

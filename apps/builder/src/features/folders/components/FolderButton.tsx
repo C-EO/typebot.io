@@ -1,85 +1,99 @@
-import { DashboardFolder } from 'db'
+import { ConfirmModal } from "@/components/ConfirmModal";
+import { FolderIcon, MoreVerticalIcon } from "@/components/icons";
+import { useToast } from "@/hooks/useToast";
+import { trpc } from "@/lib/trpc";
 import {
   Button,
   Editable,
   EditableInput,
   EditablePreview,
-  MenuItem,
-  useDisclosure,
-  Text,
-  VStack,
   IconButton,
   Menu,
   MenuButton,
+  MenuItem,
   MenuList,
-  SkeletonText,
   SkeletonCircle,
+  SkeletonText,
+  Text,
+  VStack,
   WrapItem,
   useColorModeValue,
-} from '@chakra-ui/react'
-import { FolderIcon, MoreVerticalIcon } from '@/components/icons'
-import { ConfirmModal } from '@/components/ConfirmModal'
-import { useTypebotDnd } from '../TypebotDndProvider'
-import { useRouter } from 'next/router'
-import React, { useMemo } from 'react'
-import { deleteFolderQuery } from '../queries/deleteFolderQuery'
-import { useToast } from '@/hooks/useToast'
-import { updateFolderQuery } from '../queries/updateFolderQuery'
+  useDisclosure,
+} from "@chakra-ui/react";
+import { T, useTranslate } from "@tolgee/react";
+import type { Prisma } from "@typebot.io/prisma/types";
+import { useRouter } from "next/router";
+import React, { memo, useMemo } from "react";
+import { useTypebotDnd } from "../TypebotDndProvider";
 
-export const FolderButton = ({
+type Props = {
+  folder: Prisma.DashboardFolder;
+  index: number;
+  onFolderDeleted: () => void;
+  onFolderRenamed: () => void;
+};
+
+const FolderButton = ({
   folder,
+  index,
   onFolderDeleted,
   onFolderRenamed,
-}: {
-  folder: DashboardFolder
-  onFolderDeleted: () => void
-  onFolderRenamed: (newName: string) => void
-}) => {
-  const router = useRouter()
+}: Props) => {
+  const { t } = useTranslate();
+  const router = useRouter();
   const { draggedTypebot, setMouseOverFolderId, mouseOverFolderId } =
-    useTypebotDnd()
+    useTypebotDnd();
   const isTypebotOver = useMemo(
     () => draggedTypebot && mouseOverFolderId === folder.id,
-    [draggedTypebot, folder.id, mouseOverFolderId]
-  )
-  const { isOpen, onOpen, onClose } = useDisclosure()
-  const { showToast } = useToast()
+    [draggedTypebot, folder.id, mouseOverFolderId],
+  );
+  const { isOpen, onOpen, onClose } = useDisclosure();
+  const { showToast } = useToast();
 
-  const onDeleteClick = async () => {
-    const { error } = await deleteFolderQuery(folder.id)
-    return error
-      ? showToast({
-          title: "Couldn't delete the folder",
-          description: error.message,
-        })
-      : onFolderDeleted()
-  }
+  const { mutate: deleteFolder } = trpc.folders.deleteFolder.useMutation({
+    onError: (error) => {
+      showToast({ description: error.message });
+    },
+    onSuccess: onFolderDeleted,
+  });
+
+  const { mutate: updateFolder } = trpc.folders.updateFolder.useMutation({
+    onError: (error) => {
+      showToast({ description: error.message });
+    },
+    onSuccess: onFolderRenamed,
+  });
 
   const onRenameSubmit = async (newName: string) => {
-    if (newName === '' || newName === folder.name) return
-    const { error } = await updateFolderQuery(folder.id, { name: newName })
-    return error
-      ? showToast({ title: 'An error occured', description: error.message })
-      : onFolderRenamed(newName)
-  }
+    if (newName === "" || newName === folder.name) return;
+    updateFolder({
+      workspaceId: folder.workspaceId,
+      folderId: folder.id,
+      folder: {
+        name: newName,
+      },
+    });
+  };
 
   const handleClick = () => {
-    router.push(`/typebots/folders/${folder.id}`)
-  }
+    router.push(`/typebots/folders/${folder.id}`);
+  };
 
-  const handleMouseEnter = () => setMouseOverFolderId(folder.id)
-  const handleMouseLeave = () => setMouseOverFolderId(undefined)
+  const handleMouseEnter = () => setMouseOverFolderId(folder.id);
+  const handleMouseLeave = () => setMouseOverFolderId(undefined);
   return (
     <Button
       as={WrapItem}
-      style={{ width: '225px', height: '270px' }}
+      style={{ width: "225px", height: "270px" }}
       paddingX={6}
-      whiteSpace={'normal'}
+      whiteSpace={"normal"}
       pos="relative"
       cursor="pointer"
       variant="outline"
-      colorScheme={isTypebotOver ? 'blue' : 'gray'}
-      borderWidth={isTypebotOver ? '3px' : '1px'}
+      bg={useColorModeValue("white", "gray.900")}
+      colorScheme={isTypebotOver || draggedTypebot ? "orange" : "gray"}
+      borderWidth={isTypebotOver ? "2px" : "1px"}
+      transition={"border-width 0.1s ease"}
       justifyContent="center"
       onClick={handleClick}
       onMouseEnter={handleMouseEnter}
@@ -102,28 +116,29 @@ export const FolderButton = ({
           <MenuItem
             color="red"
             onClick={(e) => {
-              e.stopPropagation()
-              onOpen()
+              e.stopPropagation();
+              onOpen();
             }}
           >
-            Delete
+            {t("delete")}
           </MenuItem>
         </MenuList>
       </Menu>
       <VStack spacing="4">
         <FolderIcon
           fontSize={50}
-          color={useColorModeValue('blue.500', 'blue.400')}
+          color={useColorModeValue("blue.500", "blue.400")}
         />
         <Editable
-          defaultValue={folder.name}
+          defaultValue={folder.name === "" ? "New folder" : folder.name}
           fontSize="18"
           onClick={(e) => e.stopPropagation()}
           onSubmit={onRenameSubmit}
+          startWithEditView={index === 0 && folder.name === ""}
         >
           <EditablePreview
             _hover={{
-              bg: useColorModeValue('gray.100', 'gray.700'),
+              bg: useColorModeValue("gray.100", "gray.700"),
             }}
             px="2"
             textAlign="center"
@@ -135,29 +150,36 @@ export const FolderButton = ({
       <ConfirmModal
         isOpen={isOpen}
         onClose={onClose}
-        confirmButtonLabel={'Delete'}
+        confirmButtonLabel={"Delete"}
         message={
           <Text>
-            Are you sure you want to delete <strong>{folder.name}</strong>{' '}
-            folder? (Everything inside will be move to your dashboard)
+            <T
+              keyName="folders.folderButton.deleteConfirmationMessage"
+              params={{
+                strong: <strong>{folder.name}</strong>,
+              }}
+            />
           </Text>
         }
         title={`Delete ${folder.name}?`}
-        onConfirm={onDeleteClick}
+        onConfirm={() =>
+          deleteFolder({
+            workspaceId: folder.workspaceId,
+            folderId: folder.id,
+          })
+        }
         confirmButtonColor="red"
       />
     </Button>
-  )
-}
+  );
+};
 
 export const ButtonSkeleton = () => (
   <Button
     as={VStack}
-    mr={{ sm: 6 }}
-    mb={6}
-    style={{ width: '225px', height: '270px' }}
+    style={{ width: "225px", height: "270px" }}
     paddingX={6}
-    whiteSpace={'normal'}
+    whiteSpace={"normal"}
     pos="relative"
     cursor="pointer"
     variant="outline"
@@ -167,4 +189,12 @@ export const ButtonSkeleton = () => (
       <SkeletonText noOfLines={2} w="full" />
     </VStack>
   </Button>
-)
+);
+
+export default memo(
+  FolderButton,
+  (prev, next) =>
+    prev.folder.id === next.folder.id &&
+    prev.index === next.index &&
+    prev.folder.name === next.folder.name,
+);

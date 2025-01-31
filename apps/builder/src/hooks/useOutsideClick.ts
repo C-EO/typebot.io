@@ -1,24 +1,38 @@
-import { useEventListener } from '@chakra-ui/react'
-import { RefObject } from 'react'
+import type { RefObject } from "react";
+import { useEffect } from "react";
 
-type Handler = (event: MouseEvent) => void
+type Handler = (event: MouseEvent) => void;
 
 type Props<T> = {
-  ref: RefObject<T>
-  handler: Handler
-}
+  ref: RefObject<T>;
+  handler: Handler;
+  capture?: boolean;
+  isEnabled?: boolean;
+};
 
 export const useOutsideClick = <T extends HTMLElement = HTMLElement>({
   ref,
   handler,
+  capture,
+  isEnabled,
 }: Props<T>): void => {
-  const triggerHandlerIfOutside = (event: MouseEvent) => {
-    const el = ref?.current
-    if (!el || el.contains(event.target as Node)) {
-      return
-    }
-    handler(event)
-  }
+  useEffect(() => {
+    if (isEnabled === false) return;
+    const triggerHandlerIfOutside = (event: MouseEvent) => {
+      const el = ref?.current;
+      if (!el || el.contains(event.target as Node)) {
+        return;
+      }
+      handler(event);
+    };
 
-  useEventListener('pointerdown', triggerHandlerIfOutside)
-}
+    document.addEventListener("pointerdown", triggerHandlerIfOutside, {
+      capture,
+    });
+    return () => {
+      document.removeEventListener("pointerdown", triggerHandlerIfOutside, {
+        capture,
+      });
+    };
+  }, [capture, handler, isEnabled, ref]);
+};
